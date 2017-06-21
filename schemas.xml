@@ -1,0 +1,13 @@
+<locatingRules xmlns="http://thaiopensource.com/ns/locating-rules/1.0">
+  <transformURI fromPattern="*.xml" toPattern="*.rnc"/>
+
+  <uri pattern="*.arxml" typeId="AR"/>
+
+  <namespace ns="http://autosar.org/schema/r4.0" typeId="AR"/>
+  <namespace ns="http://thaiopensource.com/ns/locating-rules/1.0"
+             uri="locate.rnc"/>
+
+  <documentElement localName="autosar" typeId="AR"/>
+
+  <typeId id="AR" uri="AUTOSAR_00042.rnc"/>
+</locatingRules>

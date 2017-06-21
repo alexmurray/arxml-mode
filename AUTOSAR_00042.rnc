@@ -1,0 +1,311 @@
+default namespace = "http://autosar.org/schema/r4.0"
+namespace xsi = "http://www.w3.org/2001/XMLSchema-instance"
+
+start =
+  element AUTOSAR {
+    attribute xsi:schemaLocation { text },
+    AR-PACKAGES
+  }
+AR-PACKAGES =
+  element AR-PACKAGES {
+    element AR-PACKAGE {
+      ((AR-PACKAGES | SHORT-NAME)+,
+       element ELEMENTS {
+         (element SERVICE-INTERFACE {
+            SHORT-NAME,
+            element EVENTS {
+              element VARIABLE-DATA-PROTOTYPE {
+                SHORT-NAME, TYPE-TREF, INIT-VALUE
+              }
+            },
+            element FIELDS {
+              element FIELD {
+                SHORT-NAME,
+                TYPE-TREF,
+                element HAS-GETTER { xsd:boolean },
+                element HAS-NOTIFIER { xsd:boolean },
+                element HAS-SETTER { xsd:boolean },
+                INIT-VALUE
+              }
+            },
+            element METHODS {
+              element CLIENT-SERVER-OPERATION {
+                SHORT-NAME,
+                element ARGUMENTS {
+                  element ARGUMENT-DATA-PROTOTYPE {
+                    SHORT-NAME,
+                    TYPE-TREF,
+                    element DIRECTION { xsd:NCName }
+                  }+
+                }
+              }+
+            },
+            element NAMESPACES {
+              element SYMBOL-PROPS { SHORT-NAME }+
+            }
+          }
+          | (element IMPLEMENTATION-DATA-TYPE {
+               SHORT-NAME,
+               CATEGORY,
+               element SW-DATA-DEF-PROPS {
+                 element SW-DATA-DEF-PROPS-VARIANTS {
+                   element SW-DATA-DEF-PROPS-CONDITIONAL {
+                     element BASE-TYPE-REF {
+                       attribute DEST { xsd:NCName },
+                       text
+                     }
+                   }
+                 }
+               },
+               element DYNAMIC-ARRAY-SIZE-PROFILE { empty }?
+             }
+             | element SW-BASE-TYPE {
+                 SHORT-NAME,
+                 CATEGORY?,
+                 (element BASE-TYPE-SIZE { xsd:integer }
+                  | element MAX-BASE-TYPE-SIZE { xsd:integer }),
+                 element BASE-TYPE-ENCODING { xsd:NCName },
+                 element BYTE-ORDER { xsd:NCName },
+                 element NATIVE-DECLARATION { xsd:anyURI }
+               })*
+          | (element ADAPTIVE-APPLICATION-SW-COMPONENT-TYPE {
+               SHORT-NAME,
+               element PORTS {
+                 element P-PORT-PROTOTYPE {
+                   SHORT-NAME,
+                   element PROVIDED-INTERFACE-TREF {
+                     attribute DEST { xsd:NCName },
+                     text
+                   }
+                 }
+                 | element R-PORT-PROTOTYPE {
+                     SHORT-NAME,
+                     element REQUIRED-INTERFACE-TREF {
+                       attribute DEST { xsd:NCName },
+                       text
+                     }
+                   }
+               }
+             },
+             element EXECUTABLE {
+               SHORT-NAME,
+               element ROOT-SW-COMPONENT-PROTOTYPE {
+                 SHORT-NAME,
+                 element APPLICATION-TYPE-TREF {
+                   attribute DEST { text },
+                   text
+                 }
+               }
+             },
+             element ADAPTIVE-AUTOSAR-APPLICATION {
+               SHORT-NAME,
+               element EXECUTABLE-REFS { EXECUTABLE-REF }
+             })),
+         element PROCESS { SHORT-NAME, EXECUTABLE-REF }?,
+         (element PROVIDED-SOMEIP-SERVICE-INSTANCE {
+            SHORT-NAME,
+            SERVICE-INTERFACE-REF,
+            element PROVIDED-EVENT-GROUPS {
+              element SOMEIP-PROVIDED-EVENT-GROUP {
+                SHORT-NAME,
+                EVENT-GROUP-REF,
+                element MULTICAST-THRESHOLD { xsd:integer }
+              }+
+            },
+            element SD-SERVER-CONFIG {
+              element INITIAL-OFFER-BEHAVIOR {
+                element INITIAL-DELAY-MAX-VALUE { xsd:decimal },
+                element INITIAL-DELAY-MIN-VALUE { xsd:decimal },
+                element INITIAL-REPETITIONS-BASE-DELAY { xsd:decimal },
+                element INITIAL-REPETITIONS-MAX { xsd:integer }
+              },
+              element OFFER-CYCLIC-DELAY { xsd:decimal },
+              element REQUEST-RESPONSE-DELAY {
+                element MAX-VALUE { xsd:decimal },
+                element MIN-VALUE { xsd:decimal }
+              },
+              element SERVICE-OFFER-TIME-TO-LIVE { xsd:integer }
+            },
+            element SERVICE-INSTANCE-ID { xsd:integer }
+          }
+          | element REQUIRED-SOMEIP-SERVICE-INSTANCE {
+              SHORT-NAME,
+              SERVICE-INTERFACE-REF,
+              element REQUIRED-EVENT-GROUPS {
+                element SOMEIP-REQUIRED-EVENT-GROUP {
+                  SHORT-NAME, EVENT-GROUP-REF
+                }
+              },
+              element REQUIRED-SERVICE-INSTANCE-ID { xsd:integer },
+              element REQUIRED-SERVICE-VERSION {
+                element MAJOR-VERSION { xsd:integer },
+                element MINOR-VERSION { xsd:integer }
+              }
+            })?,
+         (element ETHERNET-CLUSTER {
+            SHORT-NAME,
+            element ETHERNET-CLUSTER-VARIANTS {
+              element ETHERNET-CLUSTER-CONDITIONAL {
+                element PHYSICAL-CHANNELS {
+                  element ETHERNET-PHYSICAL-CHANNEL {
+                    SHORT-NAME,
+                    element COMM-CONNECTORS {
+                      element COMMUNICATION-CONNECTOR-REF-CONDITIONAL {
+                        COMMUNICATION-CONNECTOR-REF
+                      }
+                    },
+                    element NETWORK-ENDPOINTS {
+                      element NETWORK-ENDPOINT {
+                        SHORT-NAME,
+                        element NETWORK-ENDPOINT-ADDRESSES {
+                          element IPV-4-CONFIGURATION {
+                            element DEFAULT-GATEWAY { xsd:NMTOKEN }?,
+                            element IPV-4-ADDRESS { xsd:NMTOKEN },
+                            element NETWORK-MASK { xsd:NMTOKEN }?
+                          }
+                        }
+                      }+
+                    }
+                  }
+                }
+              }
+            }
+          }
+          | element MACHINE {
+              SHORT-NAME,
+              element COMMUNICATION-CONNECTORS {
+                element ETHERNET-COMMUNICATION-CONNECTOR {
+                  SHORT-NAME,
+                  element NETWORK-ENDPOINT-REFS {
+                    element NETWORK-ENDPOINT-REF {
+                      attribute DEST { xsd:NCName },
+                      text
+                    }
+                  },
+                  element UNICAST-NETWORK-ENDPOINT-REF {
+                    attribute DEST { xsd:NCName },
+                    text
+                  }
+                }
+              }
+            }
+          | element SOMEIP-SERVICE-INTERFACE {
+              SHORT-NAME,
+              element EVENT-DEPLOYMENTS {
+                element SOMEIP-EVENT {
+                  SHORT-NAME, EVENT-REF, EVENT-ID, TRANSPORT-PROTOCOL
+                }
+              },
+              element FIELD-DEPLOYMENTS {
+                element SOMEIP-FIELD {
+                  SHORT-NAME,
+                  element FIELD-REF {
+                    attribute DEST { xsd:NCName },
+                    text
+                  },
+                  element GET {
+                    SHORT-NAME, METHOD-ID, TRANSPORT-PROTOCOL
+                  },
+                  element NOTIFIER {
+                    SHORT-NAME, EVENT-ID, TRANSPORT-PROTOCOL
+                  },
+                  element SET {
+                    SHORT-NAME, METHOD-ID, TRANSPORT-PROTOCOL
+                  }
+                }
+              },
+              element METHOD-DEPLOYMENTS {
+                element SOMEIP-METHOD {
+                  SHORT-NAME,
+                  element METHOD-REF {
+                    attribute DEST { xsd:NCName },
+                    text
+                  },
+                  METHOD-ID
+                }+
+              },
+              SERVICE-INTERFACE-REF,
+              element EVENT-GROUPS {
+                element SOMEIP-EVENT-GROUP {
+                  SHORT-NAME,
+                  element EVENT-GROUP-ID { xsd:integer },
+                  element EVENT-REFS { EVENT-REF }
+                }+
+              },
+              element SERVICE-INTERFACE-ID { xsd:integer }
+            }
+          | (element SOMEIP-SERVICE-INSTANCE-TO-MACHINE-MAPPING {
+               SHORT-NAME,
+               COMMUNICATION-CONNECTOR-REF,
+               SERVICE-INSTANCE-REF,
+               element PORT-CONFIGS {
+                 element SERVICE-INSTANCE-PORT-CONFIG {
+                   element TCP-PORT {
+                     element PORT-NUMBER { xsd:integer }
+                   }
+                 }
+               }
+             },
+             element SERVICE-INSTANCE-TO-APPLICATION-ENDPOINT-MAPPING {
+               SHORT-NAME,
+               element PORT-PROTOTYPE-IREF {
+                 element CONTEXT-ROOT-SW-COMPONENT-PROTOTYPE-REF {
+                   attribute DEST { xsd:NCName },
+                   text
+                 },
+                 element TARGET-PORT-PROTOTYPE-REF {
+                   attribute DEST { xsd:NCName },
+                   text
+                 }
+               },
+               SERVICE-INSTANCE-REF
+             }))?
+       }?)?
+    }*
+  }
+SHORT-NAME = element SHORT-NAME { xsd:NCName }
+TYPE-TREF =
+  element TYPE-TREF {
+    attribute DEST { xsd:NCName },
+    text
+  }
+INIT-VALUE =
+  element INIT-VALUE {
+    element NUMERICAL-VALUE-SPECIFICATION {
+      element VALUE { xsd:boolean }
+    }
+  }
+CATEGORY = element CATEGORY { xsd:NCName }
+EXECUTABLE-REF =
+  element EXECUTABLE-REF {
+    attribute DEST { xsd:NCName },
+    text
+  }
+SERVICE-INTERFACE-REF =
+  element SERVICE-INTERFACE-REF {
+    attribute DEST { xsd:NCName },
+    text
+  }
+EVENT-GROUP-REF =
+  element EVENT-GROUP-REF {
+    attribute DEST { xsd:NCName },
+    text
+  }
+COMMUNICATION-CONNECTOR-REF =
+  element COMMUNICATION-CONNECTOR-REF {
+    attribute DEST { text },
+    text
+  }
+EVENT-REF =
+  element EVENT-REF {
+    attribute DEST { xsd:NCName },
+    text
+  }
+EVENT-ID = element EVENT-ID { xsd:integer }
+TRANSPORT-PROTOCOL = element TRANSPORT-PROTOCOL { xsd:NCName }
+METHOD-ID = element METHOD-ID { xsd:integer }
+SERVICE-INSTANCE-REF =
+  element SERVICE-INSTANCE-REF {
+    attribute DEST { text },
+    text
+  }
