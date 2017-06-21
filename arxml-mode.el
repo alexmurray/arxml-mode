@@ -2,15 +2,23 @@
 
 ;;; Commentary:
 
-;; TODO: Add yasnippet integration like xproc-mode
-;; https://github.com/bertfrees/xproc-mode for common snippets
 ;;
 ;; TODO: Add imenu integration like ant-mode.el https://github.com/tkg/ant-mode
+;;
+;; TODO: Add more yasnippets
+;;
 
 ;;; Code:
 (require 'nxml-mode)
 ;; try load flycheck if available
 (require 'flycheck nil t)
+;; try load yasnippet if available
+(require 'yasnippet nil t)
+
+(when (boundp 'yas/snippet-dirs)
+  (push (expand-file-name "snippets" (file-name-directory
+                                      (or load-file-name buffer-file-name)))
+        yas/snippet-dirs))
 
 ;; try and dynamically integrate with flychck
 (when (and (fboundp 'flycheck-define-checker)
