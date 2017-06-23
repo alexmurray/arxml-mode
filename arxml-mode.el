@@ -10,18 +10,17 @@
 
 ;;; Code:
 (require 'nxml-mode)
-;; try load flycheck if available
-(require 'flycheck nil t)
-;; try load yasnippet if available
-(require 'yasnippet nil t)
 
-(when (boundp 'yas/snippet-dirs)
+;; try and dynamically setup yasnippet snippets if available
+(when (and (require 'yasnippet nil t)
+           (boundp 'yas/snippet-dirs))
   (push (expand-file-name "snippets" (file-name-directory
                                       (or load-file-name buffer-file-name)))
         yas/snippet-dirs))
 
 ;; try and dynamically integrate with flychck
-(when (and (fboundp 'flycheck-define-checker)
+(when (and (require 'flycheck nil t)
+           (fboundp 'flycheck-define-checker)
            (fboundp 'flycheck-def-option-var))
   (flycheck-def-option-var flycheck-arxml-schema-path
       (concat (file-name-directory
