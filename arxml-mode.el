@@ -86,16 +86,13 @@ The xmllint is part of libxml2, see URL
             (_ (error "Unknown type %S" type)))
           (message "after: %S" (alist-get symbol arxml-tags-table)))))))
 
-(defun arxml-find-tag (type symbol)
-  "Return an alist of the TYPE of SYMBOL from the index file."
+(defun arxml-find-tag (type tag)
+  "Return an alist of the TYPE of TAG from the index file."
   (unless arxml-tags-table
     (arxml-parse-index (if (file-exists-p "index")
                            "index"
                          (read-file-name "Index file:" nil "index"))))
-  (let ((tag (alist-get symbol arxml-tags-table)))
-    (assert (or (null tag)
-                (eq (alist-get 'symbol tag) symbol)))
-    (message "%s - %S" symbol tag)
+  (let ((tag (alist-get (intern tag) arxml-tags-table)))
     (alist-get type tag)))
 
 ;; only active when in arxml-mode
@@ -104,31 +101,48 @@ The xmllint is part of libxml2, see URL
   (when (eq major-mode 'arxml-mode)
     'arxml))
 
-(defun arxml-get-xrefs (type symbol)
-  "Return a list of xref locations of TYPE for SYMBOL."
+(defun arxml-get-xrefs (type name)
+  "Return a list of xref locations of TYPE for NAME."
   (remove nil
           (mapcar #'(lambda (tag)
                       (if tag
-                          (xref-make (symbol-name symbol)
+                          (xref-make name
                                      (xref-make-file-location (alist-get 'file tag)
                                                               (alist-get 'line tag)
                                                               (alist-get 'col tag)))))
-                  (arxml-find-tag type symbol))))
+                  (arxml-find-tag type name))))
 
 (cl-defmethod xref-backend-identifier-at-point ((_backend (eql arxml)))
   (let* ((current (substring-no-properties (symbol-name (symbol-at-point))))
          (matched (string-match ".*>\\(.*\\)<.*" current))
          (identifier (if matched (match-string 1 current))))
-    (intern identifier)))
+    identifier))
 
-(cl-defmethod xref-backend-definitions ((_backend (eql arxml)) symbol)
-  (arxml-get-xrefs 'def symbol))
+(cl-defmethod xref-backend-definitions ((_backend (eql arxml)) identifier)
+  (arxml-get-xrefs 'def identifier))
 
-(cl-defmethod xref-backend-references ((_backend (eql arxml)) symbol)
-  (arxml-get-xrefs 'ref symbol))
+(cl-defmethod xref-backend-references ((_backend (eql arxml)) identifier)
+  (arxml-get-xrefs 'ref identifier))
+
+(cl-defmethod xref-backend-apropos ((_backend (eql arxml)) identifier)
+  (let ((tags))
+    (dolist (tag arxml-tags-table)
+      (let ((name (symbol-name (car tag))))
+        (when (string-match identifier name)
+          (dolist (tag (alist-get 'def (cdr tag)))
+            (message "%s %s" identifier tag)
+            (push (xref-make name
+                             (xref-make-file-location (alist-get 'file tag)
+                                                      (alist-get 'line tag)
+                                                      (alist-get 'col tag)))
+                  tags)))))
+    tags))
 
 (cl-defmethod xref-backend-identifier-completion-table ((_backend (eql arxml)))
-  (hash-table-keys arxml-tags-table))
+  (let ((identifiers))
+    (dolist (tag arxml-tags-table)
+      (push (symbol-name (car tag)) identifiers))
+    identifiers))
 
 ;; define our major-mode
 (define-derived-mode arxml-mode nxml-mode "arxml"
