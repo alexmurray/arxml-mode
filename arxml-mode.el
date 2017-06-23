@@ -14,6 +14,7 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'xref)
+(require 'thingatpt)
 (require 'yasnippet)
 (require 'flycheck)
 
@@ -50,11 +51,14 @@ The xmllint is part of libxml2, see URL
 ;; table to store index data
 (defvar arxml-tags-table nil)
 
+(defvar arxml-tags-list nil)
+
 (defun arxml-parse-index (&optional index)
   "Parse the index specified by INDEX."
   (interactive "fIndex file:")
   (with-current-buffer (find-file-noselect index)
     (setq arxml-tags-table nil)
+    (setq arxml-tags-list nil)
     (goto-char (point-min))
     (while (re-search-forward
             "^\\([dr]\\) \\([^ ]+\\) \\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\)$"
@@ -69,8 +73,9 @@ The xmllint is part of libxml2, see URL
           (unless tag
             (setq tag `((symbol . ,symbol)
                         (def . ,nil)
-                        (ref . ,nil))))
-          (setf (alist-get symbol arxml-tags-table) tag)
+                        (ref . ,nil)))
+            (push (symbol-name symbol) arxml-tags-list)
+            (setf (alist-get symbol arxml-tags-table) tag))
           (pcase type
             ("d" (push `((file . ,file)
                          (line . ,line)
@@ -108,11 +113,21 @@ The xmllint is part of libxml2, see URL
                                                               (alist-get 'col tag)))))
                   (arxml-find-tag type name))))
 
+(defun arxml-identifier-at-point ()
+  "Get the arxml identifier at point."
+  (let* ((current (thing-at-point 'symbol t))
+         (start (car (bounds-of-thing-at-point 'symbol)))
+         (matched (string-match ".*>\\(.*\\)\\(<.*?\\)" current))
+         (identifier (if matched (match-string 1 current)))
+         (begin (if matched (+ start (match-beginning 1))))
+         (end (if matched (+ start (match-end 1)))))
+    (when matched
+      `((identifier . ,identifier)
+        (begin . ,begin)
+        (end . ,end)))))
+
 (cl-defmethod xref-backend-identifier-at-point ((_backend (eql arxml)))
-  (let* ((current (substring-no-properties (symbol-name (symbol-at-point))))
-         (matched (string-match ".*>\\(.*\\)<.*" current))
-         (identifier (if matched (match-string 1 current))))
-    identifier))
+  (alist-get 'identifier (arxml-identifier-at-point)))
 
 (cl-defmethod xref-backend-definitions ((_backend (eql arxml)) identifier)
   (arxml-get-xrefs 'def identifier))
@@ -134,18 +149,32 @@ The xmllint is part of libxml2, see URL
     tags))
 
 (cl-defmethod xref-backend-identifier-completion-table ((_backend (eql arxml)))
-  (let ((identifiers))
-    (dolist (tag arxml-tags-table)
-      (push (symbol-name (car tag)) identifiers))
-    identifiers))
+  (unless arxml-tags-list
+    (arxml-parse-index (if (file-exists-p "index")
+                           "index"
+                         (read-file-name "Index file:" nil "index"))))
+  arxml-tags-list)
+
+;; completion at point
+(defun arxml-completion-at-point ()
+  (let ((identifier (arxml-identifier-at-point)))
+    (when identifier
+      (unless arxml-tags-table
+        (arxml-parse-index (if (file-exists-p "index")
+                               "index"
+                             (read-file-name "Index file:" nil "index"))))
+      (list (alist-get 'begin identifier)
+            (alist-get 'end identifier)
+            arxml-tags-list
+            :exclusive 'no
+            :company-docsig #'identity))))
 
 ;; define our major-mode
 (define-derived-mode arxml-mode nxml-mode "arxml"
   "Major mode for editing arxml files."
-  (when (boundp 'flycheck-checkers)
-    (add-to-list 'flycheck-checkers 'arxml-xmllint))
-  (when (boundp 'xref-backend-functions)
-    (add-to-list 'xref-backend-functions 'arxml-xref-backend)))
+  (add-to-list 'flycheck-checkers 'arxml-xmllint)
+  (add-to-list 'xref-backend-functions 'arxml-xref-backend)
+  (add-to-list 'completion-at-point-functions #'arxml-completion-at-point))
 
 ;; use local schemas.xml to find our local AUTOSAR_00042.rnc
 (add-to-list 'rng-schema-locating-files (concat (file-name-directory
