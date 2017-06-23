@@ -1,4 +1,5 @@
 ;;; arxml-mode --- Major mode for editing arxml files
+;; -*- lexical-binding: t -*-
 
 ;;; Commentary:
 
