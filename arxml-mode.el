@@ -69,11 +69,8 @@ The xmllint is part of libxml2, see URL
           (unless tag
             (setq tag `((symbol . ,symbol)
                         (def . ,nil)
-                        (ref . ,nil)))
-            (message "New tag %S" tag))
+                        (ref . ,nil))))
           (setf (alist-get symbol arxml-tags-table) tag)
-          (message "before: %S" (alist-get symbol arxml-tags-table))
-          (message "%s %S %s %d %d" type symbol file line col)
           (pcase type
             ("d" (push `((file . ,file)
                          (line . ,line)
@@ -83,8 +80,7 @@ The xmllint is part of libxml2, see URL
                          (line . ,line)
                          (col . ,col))
                        (alist-get 'ref tag)))
-            (_ (error "Unknown type %S" type)))
-          (message "after: %S" (alist-get symbol arxml-tags-table)))))))
+            (_ (error "Unknown type %S" type))))))))
 
 (defun arxml-find-tag (type tag)
   "Return an alist of the TYPE of TAG from the index file."
@@ -130,7 +126,6 @@ The xmllint is part of libxml2, see URL
       (let ((name (symbol-name (car tag))))
         (when (string-match identifier name)
           (dolist (tag (alist-get 'def (cdr tag)))
-            (message "%s %s" identifier tag)
             (push (xref-make name
                              (xref-make-file-location (alist-get 'file tag)
                                                       (alist-get 'line tag)
