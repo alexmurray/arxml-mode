@@ -17,7 +17,7 @@ AR-PACKAGES =
               element VARIABLE-DATA-PROTOTYPE {
                 SHORT-NAME, TYPE-TREF, INIT-VALUE
               }
-            },
+            }?,
             element FIELDS {
               element FIELD {
                 SHORT-NAME,
@@ -27,7 +27,7 @@ AR-PACKAGES =
                 element HAS-SETTER { xsd:boolean },
                 INIT-VALUE
               }
-            },
+            }?,
             element METHODS {
               element CLIENT-SERVER-OPERATION {
                 SHORT-NAME,
@@ -39,7 +39,7 @@ AR-PACKAGES =
                   }+
                 }
               }+
-            },
+            }?,
             element NAMESPACES {
               element SYMBOL-PROPS { SHORT-NAME }+
             }
