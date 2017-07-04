@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
+import os
 import argparse
 import xml.parsers.expat
 
@@ -55,10 +55,10 @@ def index_arxml(f, outfile):
 
 
 parser = argparse.ArgumentParser(description='Parse and index arxml files.')
-parser.add_argument('arxml', nargs='+', type=argparse.FileType('r'),
-                    default=sys.stdin)
 parser.add_argument('-f', '--outfile', type=argparse.FileType('w'),
-                    default=sys.stdout)
+                    default="index")
 args = parser.parse_args()
-for f in args.arxml:
-    index_arxml(f, args.outfile)
+for dirpath, dirnames, filenames in os.walk("."):
+    for filename in [f for f in filenames if f.endswith(".arxml")]:
+        with open(os.path.join(dirpath, filename), 'r') as file:
+            index_arxml(file, args.outfile)
