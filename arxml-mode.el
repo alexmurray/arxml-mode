@@ -18,18 +18,19 @@
 (require 'yasnippet)
 (require 'flycheck)
 
+(defconst arxml-mode-base-path
+  (file-name-directory
+   (file-truename
+    (expand-file-name
+     (or load-file-name buffer-file-name)))))
+
 ;; path to the AUTOSAR_00042.xsd shipped with arxml-mode.el
-(defvar arxml-mode-xsd-path (concat (file-name-directory
-                                (file-truename
-                                 (expand-file-name
-                                  (or load-file-name buffer-file-name))))
-                               "AUTOSAR_00042.xsd"))
+(defvar arxml-mode-xsd-path
+  (expand-file-name "AUTOSAR_00042.xsd" arxml-mode-base-path))
+
 ;; yasnippet integration
-(push (expand-file-name "snippets" (file-name-directory
-                                    (file-truename
-                                     (expand-file-name
-                                      (or load-file-name buffer-file-name)))))
-      yas/snippet-dirs)
+(push (expand-file-name "snippets" arxml-mode-base-path)
+      yas-snippet-dirs)
 
 ;; flycheck integration
 (flycheck-add-mode 'xml-xmllint 'arxml-mode)
@@ -42,8 +43,11 @@
 ;; list to store tag names for xref-apropos and completion-at-point
 (defvar arxml-mode-tags-list nil)
 
+;; a tag - has definitions and references
 (cl-defstruct arxml-mode-tag name def ref)
 
+;; a tag location (ie. a definition or reference) - has file, line number and
+;; column number
 (cl-defstruct arxml-mode-tag-location file line col)
 
 (defun arxml-mode-parse-index (&optional index)
@@ -73,12 +77,18 @@
               ("r" (push location (arxml-mode-tag-ref tag)))
               (_ (error "Unknown type %S" type)))))))))
 
+(defun arxml-mode-ensure-index ()
+  (unless arxml-mode-tags-list
+    (unless (file-exists-p "index")
+      (unless (zerop (process-file
+                      (expand-file-name "arxml.py" arxml-mode-base-path)
+                      nil nil nil "-f" "index"))
+        (error "Failed: '%s -f index'" (expand-file-name "arxml.py" arxml-mode-base-path))))
+    (arxml-mode-parse-index "index")))
+
 (defun arxml-mode-find-tag-location (type name)
   "Return an arxml-mode-tag-location of the TYPE of NAME from the index file."
-  (unless arxml-mode-tags-table
-    (arxml-mode-parse-index (if (file-exists-p "index")
-                           "index"
-                         (read-file-name "Index file:" nil "index"))))
+  (arxml-mode-ensure-index)
   (let ((tag (gethash name arxml-mode-tags-table)))
     (when tag
       (pcase type
@@ -105,17 +115,35 @@
                   (arxml-mode-find-tag-location type name))))
 
 (defun arxml-mode-identifier-at-point ()
-  "Get the arxml identifier at point."
+  "Get a plist containing the arxml identifier at point."
   (let* ((current (thing-at-point 'symbol t))
          (start (car (bounds-of-thing-at-point 'symbol)))
-         (matched (string-match ".*>\\(.*\\)\\(<.*?\\)" current))
-         (identifier (if matched (match-string 1 current)))
-         (begin (if matched (+ start (match-beginning 1))))
-         (end (if matched (+ start (match-end 1)))))
+         (matched (string-match ".*>\\(.*\\)\\(<.*?\\)" current)))
     (when matched
-      `((identifier . ,identifier)
-        (begin . ,begin)
-        (end . ,end)))))
+      `((identifier . ,(match-string 1 current))
+        (begin . ,(match-beginning 1))
+        (end . ,(match-end 1))))))
+
+(defun arxml-mode--create-index-process-sentinel (process _event)
+  (when (eq (process-status process) 'exit)
+    (if (zerop (process-exit-status process))
+        (message "Success: created index")
+      (message "Failed to create index (%d)" (process-exit-status process)))))
+
+(defun arxml-mode-create-index (&optional dir)
+  "Generate index file for DIR."
+  (interactive
+   (read-directory-name "Root Directory: "))
+  (unless dir
+    (setq dir default-directory))
+  (let ((default-directory dir)
+        (proc-buf (get-buffer-create " *arxml-mode-create-index*")))
+    (let ((proc (start-file-process "arxml-mode-create-index" proc-buf
+                                    (concat (file-name-directory
+                                             (or load-file-name buffer-file-name))
+                                            "arxml.py" "-f" "index")
+                                    dir)))
+      (set-process-sentinel proc #'arxml-mode--create-index-process-sentinel))))
 
 (cl-defmethod xref-backend-identifier-at-point ((_backend (eql arxml)))
   (alist-get 'identifier (arxml-mode-identifier-at-point)))
@@ -127,10 +155,7 @@
   (arxml-mode-get-xrefs 'ref identifier))
 
 (cl-defmethod xref-backend-apropos ((_backend (eql arxml)) identifier)
-  (unless arxml-mode-tags-list
-    (arxml-mode-parse-index (if (file-exists-p "index")
-                                "index"
-                              (read-file-name "Index file:" nil "index"))))
+  (arxml-mode-ensure-index)
   (let ((tags))
     (dolist (name arxml-mode-tags-list)
       (let ((tag (gethash name arxml-mode-tags-table)))
@@ -145,10 +170,7 @@
     tags))
 
 (cl-defmethod xref-backend-identifier-completion-table ((_backend (eql arxml)))
-  (unless arxml-mode-tags-list
-    (arxml-mode-parse-index (if (file-exists-p "index")
-                                "index"
-                              (read-file-name "Index file:" nil "index"))))
+  (arxml-mode-ensure-index)
   arxml-mode-tags-list)
 
 ;; completion at point
@@ -156,10 +178,7 @@
   "`completion-at-point' function for arxml-mode."
   (let ((identifier (arxml-mode-identifier-at-point)))
     (when identifier
-      (unless arxml-mode-tags-table
-        (arxml-mode-parse-index (if (file-exists-p "index")
-                                    "index"
-                                  (read-file-name "Index file:" nil "index"))))
+      (arxml-mode-ensure-index)
       (list (alist-get 'begin identifier)
             (alist-get 'end identifier)
             arxml-mode-tags-list
