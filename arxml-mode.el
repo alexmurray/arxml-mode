@@ -10,6 +10,7 @@
 ;;
 
 ;;; Code:
+(require 'sgml-mode)
 (require 'nxml-mode)
 (require 'cl-lib)
 (require 'subr-x)
@@ -117,13 +118,22 @@
 
 (defun arxml-mode-identifier-at-point ()
   "Get a plist containing the arxml identifier at point."
-  (let* ((current (thing-at-point 'symbol t))
-         (start (car (bounds-of-thing-at-point 'symbol)))
-         (matched (string-match ".*>\\(.*\\)\\(<.*?\\)" current)))
-    (when matched
-      `((identifier . ,(match-string 1 current))
-        (begin . ,(+ start (match-beginning 1)))
-        (end . ,(+ start (match-end 1)))))))
+  ;; ensure in a text section
+  (when (eq 'text (car (sgml-lexical-context)))
+    (let* ((current (thing-at-point 'symbol t))
+           (start (car (bounds-of-thing-at-point 'symbol)))
+           (matched (string-match ".*>\\(.*\\)\\(<.*?\\)" current))
+           (identifier (match-string 1 current))
+           (begin (+ start (match-beginning 1)))
+           (end (+ start (match-end 1))))
+      ;; go up and back to get current tag name
+      (when matched
+        (save-excursion
+          (nxml-backward-up-element)
+          `((tag . ,(xmltok-start-tag-local-name))
+            (identifier . ,identifier)
+            (begin . ,begin)
+            (end . ,end)))))))
 
 
 (defun arxml-mode-create-index (&optional dir)
@@ -173,11 +183,14 @@
   (arxml-mode-ensure-index)
   arxml-mode-tags-list)
 
-;; completion at point
+;; completion at point - only for ref tags
 (defun arxml-mode-completion-at-point ()
   "`completion-at-point' function for arxml-mode."
   (let ((identifier (arxml-mode-identifier-at-point)))
-    (when identifier
+    (when (and identifier
+               ;; when tag has REF suffix - this is a reference so complete
+               ;; based on tags
+               (string-equal "REF" (substring (alist-get 'tag identifier) -3 nil)))
       (arxml-mode-ensure-index)
       (list (alist-get 'begin identifier)
             (alist-get 'end identifier)
