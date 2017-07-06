@@ -130,10 +130,27 @@
       (when matched
         (save-excursion
           (nxml-backward-up-element)
-          `((tag . ,(xmltok-start-tag-local-name))
-            (identifier . ,identifier)
-            (begin . ,begin)
-            (end . ,end)))))))
+          (let ((tag-name (xmltok-start-tag-local-name)))
+            ;; if tag-name is a short-name we need to build the full name
+            (when (string-equal tag-name "SHORT-NAME")
+              (let ((file (expand-file-name (buffer-file-name)))
+                    (line (line-number-at-pos))
+                    (col (current-column)))
+                (dolist (name arxml-mode-tags-list)
+                  (let ((tag (gethash name arxml-mode-tags-table)))
+                    ;; check ends with identifier
+                    (when (and (>= (length name)
+                                   (length identifier))
+                               (string-equal identifier
+                                             (substring name (- (length identifier)) nil)))
+                      (dolist (def (arxml-mode-tag-def tag))
+                        (when (and  (string-equal file (arxml-mode-tag-location-file def))
+                                    (= line (arxml-mode-tag-location-line def)))
+                          (setq identifier name))))))))
+            `((tag-name . ,tag-name)
+              (identifier . ,identifier)
+              (begin . ,begin)
+              (end . ,end))))))))
 
 
 (defun arxml-mode-create-index (&optional dir)
@@ -190,7 +207,7 @@
     (when (and identifier
                ;; when tag has REF suffix - this is a reference so complete
                ;; based on tags
-               (string-equal "REF" (substring (alist-get 'tag identifier) -3 nil)))
+               (string-equal "REF" (substring (alist-get 'tag-name identifier) -3 nil)))
       (arxml-mode-ensure-index)
       (list (alist-get 'begin identifier)
             (alist-get 'end identifier)
