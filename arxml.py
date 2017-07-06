@@ -24,12 +24,12 @@ def index_arxml(f, outfile):
                                                         for tag in stack
                                                         if tag['short_name']
                                                         is not None),
-                                               f.name,
+                                               os.path.realpath(f.name),
                                                stack[-1]['line'],
                                                stack[-1]['col']))
         if stack[-1]['ref'] is not None:
             outfile.write('r %s %s %d %d\n' % (stack[-1]['ref'],
-                                               f.name,
+                                               os.path.realpath(f.name),
                                                stack[-1]['line'],
                                                stack[-1]['col']))
         stack.pop()
