@@ -121,8 +121,8 @@
          (matched (string-match ".*>\\(.*\\)\\(<.*?\\)" current)))
     (when matched
       `((identifier . ,(match-string 1 current))
-        (begin . ,(match-beginning 1))
-        (end . ,(match-end 1))))))
+        (begin . ,(+ start (match-beginning 1)))
+        (end . ,(+ start (match-end 1)))))))
 
 
 (defun arxml-mode-create-index (&optional dir)
