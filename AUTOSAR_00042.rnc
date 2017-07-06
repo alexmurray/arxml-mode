@@ -21,12 +21,12 @@ AR-PACKAGES =
             element FIELDS {
               element FIELD {
                 SHORT-NAME,
-                TYPE-TREF,
-                element HAS-GETTER { xsd:boolean },
-                element HAS-NOTIFIER { xsd:boolean },
-                element HAS-SETTER { xsd:boolean },
-                INIT-VALUE
-              }
+                TYPE-TREF?,
+                element HAS-GETTER { xsd:boolean }?,
+                element HAS-NOTIFIER { xsd:boolean }?,
+                element HAS-SETTER { xsd:boolean }?,
+                INIT-VALUE?
+              }+
             }?,
             element METHODS {
               element CLIENT-SERVER-OPERATION {
