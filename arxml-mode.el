@@ -124,11 +124,6 @@
         (begin . ,(match-beginning 1))
         (end . ,(match-end 1))))))
 
-(defun arxml-mode--create-index-process-sentinel (process _event)
-  (when (eq (process-status process) 'exit)
-    (if (zerop (process-exit-status process))
-        (message "Success: created index")
-      (message "Failed to create index (%d)" (process-exit-status process)))))
 
 (defun arxml-mode-create-index (&optional dir)
   "Generate index file for DIR."
@@ -139,11 +134,15 @@
   (let ((default-directory dir)
         (proc-buf (get-buffer-create " *arxml-mode-create-index*")))
     (let ((proc (start-file-process "arxml-mode-create-index" proc-buf
-                                    (concat (file-name-directory
-                                             (or load-file-name buffer-file-name))
-                                            "arxml.py" "-f" "index")
-                                    dir)))
-      (set-process-sentinel proc #'arxml-mode--create-index-process-sentinel))))
+                                    (expand-file-name "arxml.py" arxml-mode-base-path)
+                                    "-f" "index")))
+      (set-process-sentinel proc
+                            #'(lambda (process _event)
+                                (when (eq (process-status process) 'exit)
+                                  (if (zerop (process-exit-status process))
+                                      (message "Success: created index")
+                                    (message "Failed to create index (%d)"
+                                             (process-exit-status process)))))))))
 
 (cl-defmethod xref-backend-identifier-at-point ((_backend (eql arxml)))
   (alist-get 'identifier (arxml-mode-identifier-at-point)))
