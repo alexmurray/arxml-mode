@@ -78,6 +78,7 @@
               (_ (error "Unknown type %S" type)))))))))
 
 (defun arxml-mode-ensure-index ()
+  "Ensure the index file exists and has been parsed."
   (unless arxml-mode-tags-list
     (unless (file-exists-p "index")
       (unless (zerop (process-file
