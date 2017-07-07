@@ -16,8 +16,11 @@
 (require 'subr-x)
 (require 'xref)
 (require 'thingatpt)
-(require 'yasnippet)
-(require 'flycheck)
+
+(require 'yasnippet nil t)
+(require 'flycheck nil t)
+(require 'smartparents nil t)
+(require 'company nil t)
 
 (defconst arxml-mode-base-path
   (file-name-directory
@@ -30,12 +33,18 @@
   (expand-file-name "AUTOSAR_00042.xsd" arxml-mode-base-path))
 
 ;; yasnippet integration
-(push (expand-file-name "snippets" arxml-mode-base-path)
-      yas-snippet-dirs)
+(when (boundp 'yas-snippet-dirs)
+  (push (expand-file-name "snippets" arxml-mode-base-path)
+        yas-snippet-dirs))
 
 ;; flycheck integration
-(flycheck-add-mode 'xml-xmllint 'arxml-mode)
-(flycheck-add-mode 'xml-xmlstarlet 'arxml-mode)
+(when (fboundp 'flycheck-add-mode)
+  (flycheck-add-mode 'xml-xmllint 'arxml-mode)
+  (flycheck-add-mode 'xml-xmlstarlet 'arxml-mode))
+
+;; smartparens integration
+(when (boundp 'sp-navigate-consider-sgml-tags)
+  (add-to-list 'sp-navigate-consider-sgml-tags 'arxml-mode))
 
 ;; xref integration
 ;; table to store index data
@@ -244,17 +253,16 @@
   (add-to-list 'xref-backend-functions 'arxml-mode-xref-backend)
   (add-to-list 'completion-at-point-functions #'arxml-mode-completion-at-point)
   ;; integrate with flycheck
-  (setq flycheck-xml-xmlstarlet-xsd-path arxml-mode-xsd-path)
-  (setq flycheck-xml-xmllint-xsd-path flycheck-xml-xmlstarlet-xsd-path)
+  (when (boundp 'flycheck-xml-xmlstarlet-xsd-path)
+    (setq flycheck-xml-xmlstarlet-xsd-path arxml-mode-xsd-path))
+  (when (boundp 'flycheck-xml-xmllint-xsd-path)
+    (setq flycheck-xml-xmllint-xsd-path flycheck-xml-xmlstarlet-xsd-path))
   (when (boundp 'company-backends)
     (setq company-backends '((company-nxml company-capf)))))
 
 ;; use local schemas.xml to find our local AUTOSAR_00042.rnc
 (add-to-list 'rng-schema-locating-files (expand-file-name "schemas.xml" arxml-mode-base-path))
 (add-to-list 'auto-mode-alist '("\\.arxml\\'" . arxml-mode))
-;; integrate with smartparens
-(when (boundp 'sp-navigate-consider-sgml-tags)
-  (add-to-list 'sp-navigate-consider-sgml-tags 'arxml-mode))
 
 (provide 'arxml-mode)
 
