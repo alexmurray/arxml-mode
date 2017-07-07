@@ -122,35 +122,35 @@
   (when (eq 'text (car (sgml-lexical-context)))
     (let* ((current (thing-at-point 'symbol t))
            (start (car (bounds-of-thing-at-point 'symbol)))
-           (matched (string-match ".*>\\(.*\\)\\(<.*?\\)" current))
-           (identifier (match-string 1 current))
-           (begin (+ start (match-beginning 1)))
-           (end (+ start (match-end 1))))
+           (matched (string-match "\\(.*?\\)\\([a-z/]+\\)" current)))
       ;; go up and back to get current tag name
       (when matched
-        (save-excursion
-          (nxml-backward-up-element)
-          (let ((tag-name (xmltok-start-tag-local-name)))
-            ;; if tag-name is a short-name we need to build the full name
-            (when (string-equal tag-name "SHORT-NAME")
-              (let ((file (expand-file-name (buffer-file-name)))
-                    (line (line-number-at-pos))
-                    (col (current-column)))
-                (dolist (name arxml-mode-tags-list)
-                  (let ((tag (gethash name arxml-mode-tags-table)))
-                    ;; check ends with identifier
-                    (when (and (>= (length name)
-                                   (length identifier))
-                               (string-equal identifier
-                                             (substring name (- (length identifier)) nil)))
-                      (dolist (def (arxml-mode-tag-def tag))
-                        (when (and  (string-equal file (arxml-mode-tag-location-file def))
-                                    (= line (arxml-mode-tag-location-line def)))
-                          (setq identifier name))))))))
-            `((tag-name . ,tag-name)
-              (identifier . ,identifier)
-              (begin . ,begin)
-              (end . ,end))))))))
+        (let ((identifier (match-string 2 current))
+              (begin (+ start (match-beginning 2)))
+              (end (+ start (match-end 2))))
+          (save-excursion
+            (nxml-backward-up-element)
+            (let ((tag-name (xmltok-start-tag-local-name)))
+              ;; if tag-name is a short-name we need to build the full name
+              (when (string-equal tag-name "SHORT-NAME")
+                (let ((file (expand-file-name (buffer-file-name)))
+                      (line (line-number-at-pos))
+                      (col (current-column)))
+                  (dolist (name arxml-mode-tags-list)
+                    (let ((tag (gethash name arxml-mode-tags-table)))
+                      ;; check ends with identifier
+                      (when (and (>= (length name)
+                                     (length identifier))
+                                 (string-equal identifier
+                                               (substring name (- (length identifier)) nil)))
+                        (dolist (def (arxml-mode-tag-def tag))
+                          (when (and  (string-equal file (arxml-mode-tag-location-file def))
+                                      (= line (arxml-mode-tag-location-line def)))
+                            (setq identifier name))))))))
+              `((tag-name . ,tag-name)
+                (identifier . ,identifier)
+                (begin . ,begin)
+                (end . ,end)))))))))
 
 
 (defun arxml-mode-create-index (&optional dir)
