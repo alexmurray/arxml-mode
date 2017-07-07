@@ -222,7 +222,9 @@
   (add-to-list 'completion-at-point-functions #'arxml-mode-completion-at-point)
   ;; integrate with flycheck
   (setq flycheck-xml-xmlstarlet-xsd-path arxml-mode-xsd-path)
-  (setq flycheck-xml-xmllint-xsd-path flycheck-xml-xmlstarlet-xsd-path))
+  (setq flycheck-xml-xmllint-xsd-path flycheck-xml-xmlstarlet-xsd-path)
+  (when (boundp 'company-backends)
+    (setq company-backends '((company-nxml company-capf)))))
 
 ;; use local schemas.xml to find our local AUTOSAR_00042.rnc
 (add-to-list 'rng-schema-locating-files (expand-file-name "schemas.xml" arxml-mode-base-path))
