@@ -200,6 +200,13 @@
   (arxml-mode-ensure-index)
   arxml-mode-tags-list)
 
+(defun arxml-mode-tag-location-to-string (location)
+  "Get string representing LOCATION."
+  (format "%s: %d: %d"
+          (file-relative-name (arxml-mode-tag-location-file location))
+          (arxml-mode-tag-location-line location)
+          (arxml-mode-tag-location-col location)))
+
 ;; completion at point - only for ref tags
 (defun arxml-mode-completion-at-point ()
   "`completion-at-point' function for arxml-mode."
@@ -213,7 +220,23 @@
             (alist-get 'end identifier)
             arxml-mode-tags-list
             :exclusive 'no
-            :company-docsig #'identity))))
+            :company-docsig #'identity
+            :company-doc-buffer #'(lambda (identifier)
+                                    (let ((defs (arxml-mode-find-tag-location 'def identifier))
+                                          (refs (arxml-mode-find-tag-location 'ref identifier)))
+                                      (company-doc-buffer
+                                       (format "%s\n\nDefined at:\n%s\n\nReferenced at:\n%s"
+                                               identifier
+                                               (mapconcat
+                                                #'arxml-mode-tag-location-to-string
+                                                defs "\n")
+                                               (mapconcat
+                                                #'arxml-mode-tag-location-to-string
+                                                refs "\n")))))
+            :company-location #'(lambda (identifier)
+                                  (let ((def (car (arxml-mode-find-tag-location 'def identifier))))
+                                    (cons (arxml-mode-tag-location-file def)
+                                          (arxml-mode-tag-location-line def))))))))
 
 ;; define our major-mode
 (define-derived-mode arxml-mode nxml-mode "arxml"
