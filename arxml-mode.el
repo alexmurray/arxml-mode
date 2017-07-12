@@ -131,7 +131,7 @@
   (when (eq 'text (car (sgml-lexical-context)))
     (let* ((current (thing-at-point 'symbol t))
            (start (car (bounds-of-thing-at-point 'symbol)))
-           (matched (string-match "\\(.*?\\)\\([a-z/]+\\)" current)))
+           (matched (string-match "\\(.*?\\)>\\([[:alnum:]/_]+\\)" current)))
       ;; go up and back to get current tag name
       (when matched
         (let ((identifier (match-string 2 current))
