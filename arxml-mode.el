@@ -171,8 +171,7 @@
 
 (defun arxml-mode-create-index (&optional dir)
   "Generate index file for DIR."
-  (interactive
-   (read-directory-name "Root Directory: "))
+  (interactive "DRoot Directory: ")
   (unless dir
     (setq dir default-directory))
   (let ((default-directory dir)
