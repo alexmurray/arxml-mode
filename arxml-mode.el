@@ -53,8 +53,8 @@
 ;; list to store tag names for xref-apropos and completion-at-point
 (defvar arxml-mode-tags-list nil)
 
-;; a tag - has definitions and references
-(cl-defstruct arxml-mode-tag name def ref)
+;; a tag - has type, name, definitions and references
+(cl-defstruct arxml-mode-tag type name def ref)
 
 ;; a tag location (ie. a definition or reference) - has file, line number and
 ;; column number
@@ -68,17 +68,18 @@
     (setq arxml-mode-tags-list nil)
     (goto-char (point-min))
     (while (re-search-forward
-            "^\\([dr]\\) \\([^ ]+\\) \\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\)$"
+            "^\\([dr]\\) \\([^ ]+\\) \\([^ ]+\\) \\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\)$"
             nil t)
       (let ((type (substring-no-properties (match-string 1)))
-            (name (substring-no-properties (match-string 2)))
-            (file (substring-no-properties (match-string 3)))
-            (line (string-to-number (substring-no-properties (match-string 4))))
-            (col  (string-to-number (substring-no-properties (match-string 5)))))
+            (element (substring-no-properties (match-string 2)))
+            (name (substring-no-properties (match-string 3)))
+            (file (substring-no-properties (match-string 4)))
+            (line (string-to-number (substring-no-properties (match-string 5))))
+            (col  (string-to-number (substring-no-properties (match-string 6)))))
         ;; see if already in table and update
         (let ((tag (gethash name arxml-mode-tags-table)))
           (unless tag
-            (setq tag (make-arxml-mode-tag :name name :def nil :ref nil))
+            (setq tag (make-arxml-mode-tag :type element :name name :def nil :ref nil))
             (push name arxml-mode-tags-list)
             (puthash name tag arxml-mode-tags-table))
           (let ((location (make-arxml-mode-tag-location :file file :line line :col col)))
@@ -139,7 +140,9 @@
               (end (+ start (match-end 2))))
           (save-excursion
             (nxml-backward-up-element)
-            (let ((tag-name (xmltok-start-tag-local-name)))
+            (let ((tag-name (xmltok-start-tag-local-name))
+                  (attr (nxml-find-following-attribute))
+                  (dest nil))
               ;; if tag-name is a short-name we need to build the full name
               (when (string-equal tag-name "SHORT-NAME")
                 (let ((file (expand-file-name (buffer-file-name)))
@@ -156,7 +159,11 @@
                           (when (and  (string-equal file (arxml-mode-tag-location-file def))
                                       (= line (arxml-mode-tag-location-line def)))
                             (setq identifier name))))))))
+              (when attr
+                (when (string-equal (xmltok-attribute-local-name attr) "DEST")
+                  (setq dest (xmltok-attribute-value attr))))
               `((tag-name . ,tag-name)
+                (dest .,dest)
                 (identifier . ,identifier)
                 (begin . ,begin)
                 (end . ,end)))))))))
@@ -227,12 +234,16 @@
       (arxml-mode-ensure-index)
       (list (alist-get 'begin identifier)
             (alist-get 'end identifier)
-            arxml-mode-tags-list
+            (cl-remove-if-not #'(lambda (name)
+                                  (let ((tag (gethash name arxml-mode-tags-table)))
+                                    (string-equal (alist-get 'dest identifier)
+                                                  (arxml-mode-tag-type tag))))
+                              arxml-mode-tags-list)
             :exclusive 'no
             :company-docsig #'identity
             :company-doc-buffer #'(lambda (identifier)
-                                    (let ((defs (arxml-mode-find-tag-location 'def identifier))
-                                          (refs (arxml-mode-find-tag-location 'ref identifier)))
+                                    (let ((defs (arxml-mode-find-tag-locations 'def identifier))
+                                          (refs (arxml-mode-find-tag-locations 'ref identifier)))
                                       (company-doc-buffer
                                        (format "%s\n\nDefined at:\n%s\n\nReferenced at:\n%s"
                                                identifier
