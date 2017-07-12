@@ -20,6 +20,7 @@
 (require 'flycheck nil t)
 (require 'smartparens nil t)
 (require 'company nil t)
+(require 'evil-matchit nil t)
 
 (defconst arxml-mode-base-path
   (file-name-directory
@@ -45,6 +46,11 @@
 (when (boundp 'sp-navigate-consider-sgml-tags)
   (add-to-list 'sp-navigate-consider-sgml-tags 'arxml-mode))
 
+;; evil-matchit integration
+(when (boundp 'evilmi-plugins)
+  (plist-put evilmi-plugins 'arxml-mode '((evilmi-template-get-tag evilmi-template-jump)
+                                          (evilmi-simple-get-tag evilmi-simple-jump)
+                                          (evilmi-html-get-tag evilmi-html-jump))))
 ;; xref integration
 ;; table to store index data
 (defvar arxml-mode-tags-table nil)
