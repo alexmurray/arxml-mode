@@ -1,10 +1,9 @@
-;;; arxml-mode --- Major mode for editing arxml files
-;; -*- lexical-binding: t -*-
+;;; arxml-mode --- Major mode for editing arxml files -*- lexical-binding: t -*-
 
 ;;; Commentary:
 
 ;;
-;; TODO: Add imenu integration like ant-mode.el https://github.com/tkg/ant-mode
+;; TODO: Improve imenu integration to separate out into element types
 ;;
 ;; TODO: Add more yasnippets
 ;;
@@ -263,11 +262,33 @@
                                     (cons (arxml-mode-tag-location-file def)
                                           (arxml-mode-tag-location-line def))))))))
 
+;; imenu
+(defun arxml-mode-imenu-create-index ()
+  "Create imenu index for current buffer."
+  (arxml-mode-ensure-index)
+  (let ((index nil))
+    (dolist (identifier arxml-mode-tags-list)
+      (let ((tag (gethash identifier arxml-mode-tags-table)))
+        (dolist (def (arxml-mode-tag-def tag))
+          (message "%s vs %s"(expand-file-name (buffer-file-name))
+                   (arxml-mode-tag-location-file def))
+          (when (string-equal (expand-file-name (buffer-file-name))
+                              (arxml-mode-tag-location-file def))
+            (push (cons (arxml-mode-tag-name tag)
+                        (save-restriction
+                          (widen)
+                          (goto-char (point-min))
+                          (forward-line (1- (arxml-mode-tag-location-line def)))
+                          (move-to-column (arxml-mode-tag-location-col def))
+                          (point))) index)))))
+    (list (push "Types" index))))
+
 ;; define our major-mode
 (define-derived-mode arxml-mode nxml-mode "arxml"
   "Major mode for editing arxml files."
   (add-to-list 'xref-backend-functions 'arxml-mode-xref-backend)
   (add-to-list 'completion-at-point-functions #'arxml-mode-completion-at-point)
+  (setq imenu-create-index-function #'arxml-mode-imenu-create-index)
   ;; integrate with flycheck
   (when (boundp 'flycheck-xml-xmlstarlet-xsd-path)
     (setq flycheck-xml-xmlstarlet-xsd-path arxml-mode-xsd-path))
