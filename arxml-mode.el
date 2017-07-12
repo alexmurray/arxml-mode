@@ -183,7 +183,10 @@
                             #'(lambda (process _event)
                                 (when (eq (process-status process) 'exit)
                                   (if (zerop (process-exit-status process))
-                                      (message "Success: created index")
+                                      (progn
+                                        (message "Success: created index")
+                                        (arxml-mode-parse-index
+                                         (expand-file-name "index" default-directory)))
                                     (message "Failed to create index (%d)"
                                              (process-exit-status process)))))))))
 
