@@ -18,7 +18,7 @@
 
 (require 'yasnippet nil t)
 (require 'flycheck nil t)
-(require 'smartparents nil t)
+(require 'smartparens nil t)
 (require 'company nil t)
 
 (defconst arxml-mode-base-path
