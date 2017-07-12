@@ -98,8 +98,8 @@
         (error "Failed: '%s -f index'" (expand-file-name "arxml.py" arxml-mode-base-path))))
     (arxml-mode-parse-index "index")))
 
-(defun arxml-mode-find-tag-location (type name)
-  "Return an arxml-mode-tag-location of the TYPE of NAME from the index file."
+(defun arxml-mode-find-tag-locations (type name)
+  "Return a list of arxml-mode-tag-location of the TYPE of NAME from the index file."
   (arxml-mode-ensure-index)
   (let ((tag (gethash name arxml-mode-tags-table)))
     (when tag
@@ -124,7 +124,7 @@
                                       (arxml-mode-tag-location-file tag)
                                       (arxml-mode-tag-location-line tag)
                                       (arxml-mode-tag-location-col tag)))))
-                  (arxml-mode-find-tag-location type name))))
+                  (arxml-mode-find-tag-locations type name))))
 
 (defun arxml-mode-identifier-at-point ()
   "Get a plist containing the arxml identifier at point."
@@ -254,7 +254,7 @@
                                                 #'arxml-mode-tag-location-to-string
                                                 refs "\n")))))
             :company-location #'(lambda (identifier)
-                                  (let ((def (car (arxml-mode-find-tag-location 'def identifier))))
+                                  (let ((def (car (arxml-mode-find-tag-locations 'def identifier))))
                                     (cons (arxml-mode-tag-location-file def)
                                           (arxml-mode-tag-location-line def))))))))
 
