@@ -15,7 +15,7 @@ AR-PACKAGES =
             SHORT-NAME,
             element EVENTS {
               element VARIABLE-DATA-PROTOTYPE {
-                SHORT-NAME, TYPE-TREF, INIT-VALUE
+                SHORT-NAME, TYPE-TREF, INIT-VALUE?
               }
             }?,
             element FIELDS {
