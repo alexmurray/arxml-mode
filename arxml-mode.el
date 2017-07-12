@@ -242,6 +242,9 @@
                                                   (arxml-mode-tag-type tag))))
                               arxml-mode-tags-list)
             :exclusive 'no
+            :annotation-function #'(lambda (identifier)
+                                     (let ((tag (gethash identifier arxml-mode-tags-table)))
+                                       (arxml-mode-tag-type tag)))
             :company-docsig #'identity
             :company-doc-buffer #'(lambda (identifier)
                                     (let ((defs (arxml-mode-find-tag-locations 'def identifier))
