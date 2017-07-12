@@ -145,8 +145,7 @@
               ;; if tag-name is a short-name we need to build the full name
               (when (string-equal tag-name "SHORT-NAME")
                 (let ((file (expand-file-name (buffer-file-name)))
-                      (line (line-number-at-pos))
-                      (col (current-column)))
+                      (line (line-number-at-pos)))
                   (dolist (name arxml-mode-tags-list)
                     (let ((tag (gethash name arxml-mode-tags-table)))
                       ;; check ends with identifier
