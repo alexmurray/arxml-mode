@@ -148,7 +148,8 @@
   (when (eq 'text (car (sgml-lexical-context)))
     (let* ((current (thing-at-point 'symbol t))
            (start (car (bounds-of-thing-at-point 'symbol)))
-           (matched (string-match "\\(.*?\\)>\\([[:alnum:]/_]+\\)" current)))
+           (matched (when current
+                      (string-match "\\(.*?\\)>\\([[:alnum:]/_]+\\)" current))))
       ;; go up and back to get current tag name
       (when matched
         (let ((identifier (match-string 2 current))
@@ -283,8 +284,6 @@
     (dolist (identifier arxml-mode-tags-list)
       (let ((tag (gethash identifier arxml-mode-tags-table)))
         (dolist (def (arxml-mode-tag-def tag))
-          (message "%s vs %s"(expand-file-name (buffer-file-name))
-                   (arxml-mode-tag-location-file def))
           (when (string-equal (expand-file-name (buffer-file-name))
                               (arxml-mode-tag-location-file def))
             (push (cons (arxml-mode-tag-name tag)
@@ -315,11 +314,12 @@
   (speedbar-add-supported-extension '("\\.arxml"))
   (add-function :before-until (local 'eldoc-documentation-function)
                 #'arxml-mode-eldoc-function)
-  ;; integrate with flycheck
+  ;; integrate with flycheck for validation
   (when (boundp 'flycheck-xml-xmlstarlet-xsd-path)
     (setq flycheck-xml-xmlstarlet-xsd-path arxml-mode-xsd-path))
   (when (boundp 'flycheck-xml-xmllint-xsd-path)
     (setq flycheck-xml-xmllint-xsd-path flycheck-xml-xmlstarlet-xsd-path))
+  ;; limit company to only the useful backends
   (when (boundp 'company-backends)
     (setq company-backends '((company-nxml company-capf)))))
 
