@@ -214,7 +214,10 @@
           (save-excursion
             (goto-char (alist-get 'pos current))
             (setq line (line-number-at-pos))
-            (setq col (current-column)))
+            ;; ensure tabs only count as 1 character otherwise xref gets
+            ;; confused
+            (setq col (let ((tab-width 1))
+                        (current-column))))
           (unless tag
             (setq tag (make-arxml-mode-tag :type element :name identifier :def nil :ref nil))
             (push identifier arxml-mode-tags-list)
