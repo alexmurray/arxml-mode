@@ -21,6 +21,7 @@
 (require 'smartparens nil t)
 (require 'company nil t)
 (require 'evil-matchit nil t)
+(require 'all-the-icons nil t)
 
 (defconst arxml-mode-base-path
   (file-name-directory
@@ -51,6 +52,14 @@
   (plist-put evilmi-plugins 'arxml-mode '((evilmi-template-get-tag evilmi-template-jump)
                                           (evilmi-simple-get-tag evilmi-simple-jump)
                                           (evilmi-html-get-tag evilmi-html-jump))))
+;; all the icons integration
+(when (boundp 'all-the-icons-icon-alist)
+  (push '("\.arxml$" all-the-icons-faicon "file-code-o" :height 0.95 :face all-the-icons-lorange)
+        all-the-icons-icon-alist))
+(when (boundp 'all-the-icons-mode-icon-alist)
+  (push '(arxml-mode all-the-icons-faicon "file-code-o" :height 0.95 :face all-the-icons-lorange)
+        all-the-icons-mode-icon-alist))
+
 ;; xref integration
 ;; table to store index data
 (defvar arxml-mode-tags-table nil)
