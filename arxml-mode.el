@@ -143,7 +143,7 @@
                   (arxml-mode-find-tag-locations type name))))
 
 (defun arxml-mode-identifier-at-point ()
-  "Get a plist containing the arxml identifier at point."
+  "Get a alist containing the arxml identifier at point."
   ;; ensure in a text section
   (when (eq 'text (car (sgml-lexical-context)))
     (let* ((current (thing-at-point 'symbol t))
