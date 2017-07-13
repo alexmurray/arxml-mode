@@ -16,6 +16,7 @@
 (require 'xref)
 (require 'thingatpt)
 (require 'speedbar)
+(require 'eldoc)
 
 (require 'yasnippet nil t)
 (require 'flycheck nil t)
@@ -295,6 +296,15 @@
                           (point))) index)))))
     (list (push "Name" index))))
 
+(defun arxml-mode-eldoc-function ()
+  "Support for eldoc mode."
+  (let ((tag (gethash (alist-get 'identifier (arxml-mode-identifier-at-point)) arxml-mode-tags-table)))
+    (when tag
+      (format "%s -> %s"
+              (arxml-mode-tag-name tag)
+              (propertize (arxml-mode-tag-type tag)
+                          'face 'bold)))))
+
 ;; define our major-mode
 (define-derived-mode arxml-mode nxml-mode "arxml"
   "Major mode for editing arxml files."
@@ -303,6 +313,8 @@
   (setq imenu-create-index-function #'arxml-mode-imenu-create-index)
   (imenu-add-to-menubar "ARXML")
   (speedbar-add-supported-extension '("\\.arxml"))
+  (add-function :before-until (local 'eldoc-documentation-function)
+                #'arxml-mode-eldoc-function)
   ;; integrate with flycheck
   (when (boundp 'flycheck-xml-xmlstarlet-xsd-path)
     (setq flycheck-xml-xmlstarlet-xsd-path arxml-mode-xsd-path))
