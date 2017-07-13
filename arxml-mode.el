@@ -292,7 +292,7 @@
                           (forward-line (1- (arxml-mode-tag-location-line def)))
                           (move-to-column (arxml-mode-tag-location-col def))
                           (point))) index)))))
-    (list (push "Types" index))))
+    (list (push "Name" index))))
 
 ;; define our major-mode
 (define-derived-mode arxml-mode nxml-mode "arxml"
@@ -300,6 +300,7 @@
   (add-to-list 'xref-backend-functions 'arxml-mode-xref-backend)
   (add-to-list 'completion-at-point-functions #'arxml-mode-completion-at-point)
   (setq imenu-create-index-function #'arxml-mode-imenu-create-index)
+  (imenu-add-to-menubar "ARXML")
   ;; integrate with flycheck
   (when (boundp 'flycheck-xml-xmlstarlet-xsd-path)
     (setq flycheck-xml-xmlstarlet-xsd-path arxml-mode-xsd-path))
