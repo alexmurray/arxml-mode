@@ -63,8 +63,8 @@
         all-the-icons-mode-icon-alist))
 
 ;; xref integration
-;; table to store index data
-(defvar arxml-mode-tags-table nil)
+;; table to store tags data
+(defvar arxml-mode-tags-table (make-hash-table :test 'equal))
 
 ;; list to store tag names for xref-apropos and completion-at-point
 (defvar arxml-mode-tags-list nil)
@@ -76,47 +76,24 @@
 ;; column number
 (cl-defstruct arxml-mode-tag-location file line col)
 
-(defun arxml-mode-parse-index (&optional index)
-  "Parse the index specified by INDEX."
-  (interactive "fIndex file:")
-  (with-current-buffer (find-file-noselect index)
-    (setq arxml-mode-tags-table (make-hash-table :test 'equal))
-    (setq arxml-mode-tags-list nil)
-    (goto-char (point-min))
-    (while (re-search-forward
-            "^\\([dr]\\) \\([^ ]+\\) \\([^ ]+\\) \\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\)$"
-            nil t)
-      (let ((type (substring-no-properties (match-string 1)))
-            (element (substring-no-properties (match-string 2)))
-            (name (substring-no-properties (match-string 3)))
-            (file (substring-no-properties (match-string 4)))
-            (line (string-to-number (substring-no-properties (match-string 5))))
-            (col  (string-to-number (substring-no-properties (match-string 6)))))
-        ;; see if already in table and update
-        (let ((tag (gethash name arxml-mode-tags-table)))
-          (unless tag
-            (setq tag (make-arxml-mode-tag :type element :name name :def nil :ref nil))
-            (push name arxml-mode-tags-list)
-            (puthash name tag arxml-mode-tags-table))
-          (let ((location (make-arxml-mode-tag-location :file file :line line :col col)))
-            (pcase type
-              ("d" (push location (arxml-mode-tag-def tag)))
-              ("r" (push location (arxml-mode-tag-ref tag)))
-              (_ (error "Unknown type %S" type)))))))))
-
-(defun arxml-mode-ensure-index ()
-  "Ensure the index file exists and has been parsed."
+(defun arxml-mode-ensure-tags ()
+  "Ensure the tags have been parsed."
   (unless arxml-mode-tags-list
-    (unless (file-exists-p "index")
-      (unless (zerop (process-file
-                      (expand-file-name "arxml.py" arxml-mode-base-path)
-                      nil nil nil "-f" "index"))
-        (error "Failed: '%s -f index'" (expand-file-name "arxml.py" arxml-mode-base-path))))
-    (arxml-mode-parse-index "index")))
+    ;; ensure to create tags hash table
+    (dolist (f (directory-files default-directory nil ".*\\.arxml\\'"))
+      (with-current-buffer (find-file-noselect f)
+        (arxml-mode-parse-buffer)))))
+
+(defun arxml-mode-reset-tags ()
+  "Reset tag information."
+  (interactive)
+  (setq arxml-mode-tags-list nil)
+  (clrhash arxml-mode-tags-table)
+  (arxml-mode-ensure-tags))
 
 (defun arxml-mode-find-tag-locations (type name)
-  "Return a list of arxml-mode-tag-location of the TYPE of NAME from the index file."
-  (arxml-mode-ensure-index)
+  "Return a list of arxml-mode-tag-location of the TYPE of NAME from the tags table."
+  (arxml-mode-ensure-tags)
   (let ((tag (gethash name arxml-mode-tags-table)))
     (when tag
       (pcase type
@@ -185,26 +162,84 @@
                 (end . ,end)))))))))
 
 
-(defun arxml-mode-create-index (&optional dir)
-  "Generate index file for DIR."
-  (interactive "DRoot Directory: ")
-  (unless dir
-    (setq dir default-directory))
-  (let ((default-directory dir)
-        (proc-buf (get-buffer-create " *arxml-mode-create-index*")))
-    (let ((proc (start-file-process "arxml-mode-create-index" proc-buf
-                                    (expand-file-name "arxml.py" arxml-mode-base-path)
-                                    "-f" "index")))
-      (set-process-sentinel proc
-                            #'(lambda (process _event)
-                                (when (eq (process-status process) 'exit)
-                                  (if (zerop (process-exit-status process))
-                                      (progn
-                                        (message "Success: created index")
-                                        (arxml-mode-parse-index
-                                         (expand-file-name "index" default-directory)))
-                                    (message "Failed to create index (%d)"
-                                             (process-exit-status process)))))))))
+(defvar arxml-mode-parse-stack nil)
+
+(defun arxml-mode-parse-tag (text start-tag)
+  "Parse TEXT and START-TAG."
+  (if start-tag
+      (push `((tag . ,(cdar start-tag))
+              (attrs . ,(cadr start-tag))
+              (ref . ,nil)
+              (short-name . ,nil)
+              (pos . ,(point)))
+            arxml-mode-parse-stack)
+    ;; else treat as data and end of tag
+    (let ((current (car arxml-mode-parse-stack))
+          (parent (cadr arxml-mode-parse-stack))
+          (type nil)
+          (identifier nil)
+          (element nil))
+      (when (string-equal (alist-get 'tag current) "SHORT-NAME")
+        ;; assign this text to the short-name property of parent (cadr)
+        (setf (alist-get 'short-name parent) text)
+        ;; short-name is at current location
+        (setf (alist-get 'pos parent)
+              (alist-get 'pos current)))
+      ;; if ends with REF is a reference then add as ref
+      (when (string-match "REF\\'" (alist-get 'tag current))
+        (setf (alist-get 'ref current) text))
+      ;; now process end of tag - if the element on top of stack has a short-name
+      ;; then this is a definition
+      (when (alist-get 'short-name current)
+        (setq type 'def)
+        (setq identifier
+              (concat "/" (mapconcat #'(lambda (tag) (alist-get 'short-name tag))
+                                     (reverse
+                                      (cl-remove-if-not
+                                       #'(lambda (tag) (alist-get 'short-name tag))
+                                       arxml-mode-parse-stack))
+                                     "/")))
+        (setq element (alist-get 'tag current)))
+      ;; if is a reference and has a DEST this is a reference
+      (when (and (alist-get 'ref current)
+                 (cdr (assoc "DEST" (alist-get 'attrs current))))
+        (setq type 'ref)
+        (setq identifier (alist-get 'ref current))
+        (setq element (cdr (assoc "DEST" (alist-get 'attrs current)))))
+      (when (and type identifier element)
+        ;; see if already in table and update
+        (let ((tag (gethash identifier arxml-mode-tags-table))
+              (line nil)
+              (col nil))
+          (save-excursion
+            (goto-char (alist-get 'pos current))
+            (setq line (line-number-at-pos))
+            (setq col (current-column)))
+          (unless tag
+            (setq tag (make-arxml-mode-tag :type element :name identifier :def nil :ref nil))
+            (push identifier arxml-mode-tags-list)
+            (puthash identifier tag arxml-mode-tags-table))
+          (let ((location (make-arxml-mode-tag-location :file (buffer-file-name) :line line :col col)))
+            (pcase type
+              ('def (push location (arxml-mode-tag-def tag)))
+              ('ref (push location (arxml-mode-tag-ref tag)))
+              (_ (error "Unknown type %S" type))))))
+      (pop arxml-mode-parse-stack)))
+  ;; ensure to return nil since this is technically a validation function so
+  ;; return nil to signal all is valid :)
+  nil)
+
+(defun arxml-mode-parse-buffer ()
+  "Parse current buffer."
+  ;; use nxml to parse and hook in via the tag validation function
+  (setq arxml-mode-parse-stack nil)
+  (let ((nxml-parse-file-name (buffer-file-name))
+        (nxml-validate-function #'arxml-mode-parse-tag))
+    (save-excursion
+      (save-restriction
+        (widen)
+        (goto-char (point-min))
+        (nxml-parse-instance)))))
 
 (cl-defmethod xref-backend-identifier-at-point ((_backend (eql arxml)))
   (alist-get 'identifier (arxml-mode-identifier-at-point)))
@@ -216,7 +251,7 @@
   (arxml-mode-get-xrefs 'ref identifier))
 
 (cl-defmethod xref-backend-apropos ((_backend (eql arxml)) identifier)
-  (arxml-mode-ensure-index)
+  (arxml-mode-ensure-tags)
   (let ((tags))
     (dolist (name arxml-mode-tags-list)
       (let ((tag (gethash name arxml-mode-tags-table)))
@@ -231,7 +266,7 @@
     tags))
 
 (cl-defmethod xref-backend-identifier-completion-table ((_backend (eql arxml)))
-  (arxml-mode-ensure-index)
+  (arxml-mode-ensure-tags)
   arxml-mode-tags-list)
 
 (defun arxml-mode-tag-location-to-string (location)
@@ -249,7 +284,7 @@
                ;; when tag has REF suffix - this is a reference so complete
                ;; based on tags
                (string-equal "REF" (substring (alist-get 'tag-name identifier) -3 nil)))
-      (arxml-mode-ensure-index)
+      (arxml-mode-ensure-tags)
       (list (alist-get 'begin identifier)
             (alist-get 'end identifier)
             (cl-remove-if-not #'(lambda (name)
@@ -279,7 +314,7 @@
 ;; imenu
 (defun arxml-mode-imenu-create-index ()
   "Create imenu index for current buffer."
-  (arxml-mode-ensure-index)
+  (arxml-mode-ensure-tags)
   (let ((index nil))
     (dolist (identifier arxml-mode-tags-list)
       (let ((tag (gethash identifier arxml-mode-tags-table)))
