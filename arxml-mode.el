@@ -15,6 +15,7 @@
 (require 'subr-x)
 (require 'xref)
 (require 'thingatpt)
+(require 'speedbar)
 
 (require 'yasnippet nil t)
 (require 'flycheck nil t)
@@ -301,6 +302,7 @@
   (add-to-list 'completion-at-point-functions #'arxml-mode-completion-at-point)
   (setq imenu-create-index-function #'arxml-mode-imenu-create-index)
   (imenu-add-to-menubar "ARXML")
+  (speedbar-add-supported-extension '("\\.arxml"))
   ;; integrate with flycheck
   (when (boundp 'flycheck-xml-xmlstarlet-xsd-path)
     (setq flycheck-xml-xmlstarlet-xsd-path arxml-mode-xsd-path))
