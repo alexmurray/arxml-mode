@@ -284,7 +284,9 @@
       (save-restriction
         (widen)
         (goto-char (point-min))
-        (nxml-parse-instance)))))
+        (condition-case err
+            (nxml-parse-instance)
+          (nxml-file-parse-error nil))))))
 
 (cl-defmethod xref-backend-identifier-at-point ((_backend (eql arxml)))
   (alist-get 'identifier (arxml-mode-identifier-at-point)))
