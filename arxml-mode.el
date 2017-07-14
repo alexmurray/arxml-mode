@@ -240,10 +240,38 @@
   ;; return nil to signal all is valid :)
   nil)
 
+(defun arxml-mode-tag-location-is-current-buffer-p (location)
+  "Return whether LOCATION refers to the current buffer."
+  (string-equal (arxml-mode-tag-location-file location)
+                (buffer-file-name)))
+
 (defun arxml-mode-parse-buffer ()
   "Parse current buffer."
-  ;; use nxml to parse and hook in via the tag validation function
   (setq arxml-mode-parse-stack nil)
+  ;; clear any existing entries which refer to this buffer
+  (let ((orphans nil))
+    (dolist (identifier arxml-mode-tags-list)
+      (let ((tag (arxml-mode-lookup-tag identifier t)))
+        ;; is an orphan already if not in tags table
+        (if (null tag)
+            (push identifier orphans)
+          (setf (arxml-mode-tag-def tag)
+                (cl-delete-if #'arxml-mode-tag-location-is-current-buffer-p
+                              (arxml-mode-tag-def tag)))
+          (setf (arxml-mode-tag-ref tag)
+                (cl-delete-if #'arxml-mode-tag-location-is-current-buffer-p
+                              (arxml-mode-tag-ref tag)))
+          ;; if there are no definitions or references left then remove from tags
+          ;; table
+          (when (= 0 (+ (length (arxml-mode-tag-def tag))
+                        (length (arxml-mode-tag-ref tag))))
+            (remhash identifier arxml-mode-tags-table)
+            (push identifier orphans)))))
+    ;; remove any orphans from the list
+    (dolist (orphan orphans)
+      (setq arxml-mode-tags-list
+            (cl-delete orphan arxml-mode-tags-list :test #'equal))))
+  ;; use nxml to parse and hook in via the tag validation function
   (let ((nxml-parse-file-name (buffer-file-name))
         (nxml-validate-function #'arxml-mode-parse-tag))
     (save-excursion
@@ -354,7 +382,8 @@
 ;; define our major-mode
 (define-derived-mode arxml-mode nxml-mode "arxml"
   "Major mode for editing arxml files."
-  (add-to-list 'xref-backend-functions 'arxml-mode-xref-backend)
+  (add-to-list 'after-change-functions #'(lambda (beg end len) (arxml-mode-parse-buffer)))
+  (add-to-list 'xref-backend-functions #'arxml-mode-xref-backend)
   (add-to-list 'completion-at-point-functions #'arxml-mode-completion-at-point)
   (setq imenu-create-index-function #'arxml-mode-imenu-create-index)
   (imenu-add-to-menubar "ARXML")
