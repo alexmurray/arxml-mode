@@ -326,12 +326,12 @@
 ;; completion at point - only for ref tags
 (defun arxml-mode-completion-at-point ()
   "`completion-at-point' function for arxml-mode."
+  (arxml-mode-ensure-tags)
   (let ((identifier (arxml-mode-identifier-at-point)))
     (when (and identifier
                ;; when tag has REF suffix - this is a reference so complete
                ;; based on tags
                (string-match "REF\\'" (alist-get 'tag-name identifier)))
-      (arxml-mode-ensure-tags)
       (list (alist-get 'begin identifier)
             (alist-get 'end identifier)
             (cl-remove-if-not #'(lambda (name)
