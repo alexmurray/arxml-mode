@@ -338,7 +338,10 @@
                                   (let ((tag (arxml-mode-lookup-tag name)))
                                     (string-equal (alist-get 'dest identifier)
                                                   (arxml-mode-tag-type tag))))
-                              arxml-mode-tags-list)
+                              ;; don't include current identifier
+                              (cl-remove (alist-get 'identifier identifier)
+                                         arxml-mode-tags-list
+                                         :test #'equal))
             :exclusive 'no
             :company-docsig #'identity
             :company-doc-buffer #'(lambda (identifier)
