@@ -69,6 +69,9 @@
 ;; list to store tag names for xref-apropos and completion-at-point
 (defvar arxml-mode-tags-list nil)
 
+;; directory where all arxml files reside
+(defvar arxml-mode-directory nil)
+
 ;; a tag - has type, name, definitions and references
 (cl-defstruct arxml-mode-tag type name def ref)
 
@@ -85,6 +88,8 @@
 
 (defun arxml-mode-ensure-tags ()
   "Ensure the tags have been parsed and consistent."
+  (unless (string-equal arxml-mode-directory default-directory)
+    (arxml-mode-reset-tags))
   (if arxml-mode-tags-list
       ;; raise error if not found in tags
       (dolist (identifier arxml-mode-tags-list)
@@ -98,6 +103,7 @@
   "Reset tag information."
   (interactive)
   (setq arxml-mode-tags-list nil)
+  (setq arxml-mode-directory nil)
   (clrhash arxml-mode-tags-table))
 
 (defun arxml-mode-find-tag-locations (type name)
