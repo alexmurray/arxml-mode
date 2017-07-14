@@ -76,9 +76,19 @@
 ;; column number
 (cl-defstruct arxml-mode-tag-location file line col)
 
+(defun arxml-mode-lookup-tag (identifier &optional no-error)
+  "Lookup tag for IDENTIFIER and signal an error unless NO-ERROR."
+  (let ((tag (gethash identifier arxml-mode-tags-table)))
+    (when (and (null tag) (null no-error))
+      (error "%s not found in tags table" identifier))
+    tag))
+
 (defun arxml-mode-ensure-tags ()
-  "Ensure the tags have been parsed."
-  (unless arxml-mode-tags-list
+  "Ensure the tags have been parsed and consistent."
+  (if arxml-mode-tags-list
+      ;; raise error if not found in tags
+      (dolist (identifier arxml-mode-tags-list)
+        (assert (arxml-mode-lookup-tag identifier t) t))
     ;; ensure to create tags hash table
     (dolist (f (directory-files default-directory nil ".*\\.arxml\\'"))
       (with-current-buffer (find-file-noselect f)
@@ -88,18 +98,16 @@
   "Reset tag information."
   (interactive)
   (setq arxml-mode-tags-list nil)
-  (clrhash arxml-mode-tags-table)
-  (arxml-mode-ensure-tags))
+  (clrhash arxml-mode-tags-table))
 
 (defun arxml-mode-find-tag-locations (type name)
   "Return a list of arxml-mode-tag-location of the TYPE of NAME from the tags table."
   (arxml-mode-ensure-tags)
-  (let ((tag (gethash name arxml-mode-tags-table)))
-    (when tag
-      (pcase type
-        ('def (arxml-mode-tag-def tag))
-        ('ref (arxml-mode-tag-ref tag))
-        (_ (error "Unknown type %S" type))))))
+  (let ((tag (arxml-mode-lookup-tag name)))
+    (pcase type
+      ('def (arxml-mode-tag-def tag))
+      ('ref (arxml-mode-tag-ref tag))
+      (_ (error "Unknown type %S" type)))))
 
 ;; only active when in arxml-mode
 (defun arxml-mode-xref-backend ()
@@ -142,7 +150,7 @@
                 (let ((file (expand-file-name (buffer-file-name)))
                       (line (line-number-at-pos)))
                   (dolist (name arxml-mode-tags-list)
-                    (let ((tag (gethash name arxml-mode-tags-table)))
+                    (let ((tag (arxml-mode-lookup-tag name)))
                       ;; check ends with identifier
                       (when (and (>= (length name)
                                      (length identifier))
@@ -208,7 +216,7 @@
         (setq element (cdr (assoc "DEST" (alist-get 'attrs current)))))
       (when (and type identifier element)
         ;; see if already in table and update
-        (let ((tag (gethash identifier arxml-mode-tags-table))
+        (let ((tag (arxml-mode-lookup-tag identifier t))
               (line nil)
               (col nil))
           (save-excursion
@@ -220,7 +228,7 @@
                         (current-column))))
           (unless tag
             (setq tag (make-arxml-mode-tag :type element :name identifier :def nil :ref nil))
-            (push identifier arxml-mode-tags-list)
+            (cl-pushnew identifier arxml-mode-tags-list :test #'equal)
             (puthash identifier tag arxml-mode-tags-table))
           (let ((location (make-arxml-mode-tag-location :file (buffer-file-name) :line line :col col)))
             (pcase type
@@ -257,7 +265,7 @@
   (arxml-mode-ensure-tags)
   (let ((tags))
     (dolist (name arxml-mode-tags-list)
-      (let ((tag (gethash name arxml-mode-tags-table)))
+      (let ((tag (arxml-mode-lookup-tag name)))
         (when (string-match identifier name)
           (dolist (location (arxml-mode-tag-def tag))
             (push (xref-make name
@@ -286,12 +294,12 @@
     (when (and identifier
                ;; when tag has REF suffix - this is a reference so complete
                ;; based on tags
-               (string-equal "REF" (substring (alist-get 'tag-name identifier) -3 nil)))
+               (string-match "REF\\'" (alist-get 'tag-name identifier)))
       (arxml-mode-ensure-tags)
       (list (alist-get 'begin identifier)
             (alist-get 'end identifier)
             (cl-remove-if-not #'(lambda (name)
-                                  (let ((tag (gethash name arxml-mode-tags-table)))
+                                  (let ((tag (arxml-mode-lookup-tag name)))
                                     (string-equal (alist-get 'dest identifier)
                                                   (arxml-mode-tag-type tag))))
                               arxml-mode-tags-list)
@@ -320,7 +328,7 @@
   (arxml-mode-ensure-tags)
   (let ((index nil))
     (dolist (identifier arxml-mode-tags-list)
-      (let ((tag (gethash identifier arxml-mode-tags-table)))
+      (let ((tag (arxml-mode-lookup-tag identifier)))
         (dolist (def (arxml-mode-tag-def tag))
           (when (string-equal (expand-file-name (buffer-file-name))
                               (arxml-mode-tag-location-file def))
@@ -335,7 +343,8 @@
 
 (defun arxml-mode-eldoc-function ()
   "Support for eldoc mode."
-  (let ((tag (gethash (alist-get 'identifier (arxml-mode-identifier-at-point)) arxml-mode-tags-table)))
+  (arxml-mode-ensure-tags)
+  (let ((tag (arxml-mode-lookup-tag (alist-get 'identifier (arxml-mode-identifier-at-point)) t)))
     (when tag
       (format "%s -> %s"
               (arxml-mode-tag-name tag)
