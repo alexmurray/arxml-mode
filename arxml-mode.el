@@ -148,11 +148,11 @@
               (end (+ start (match-end 2))))
           (save-excursion
             (nxml-backward-up-element)
-            (let ((tag-name (xmltok-start-tag-local-name))
+            (let ((element (xmltok-start-tag-local-name))
                   (attr (nxml-find-following-attribute))
                   (dest nil))
-              ;; if tag-name is a short-name we need to build the full name
-              (when (string-equal tag-name "SHORT-NAME")
+              ;; if element is a short-name we need to build the full name
+              (when (string-equal element "SHORT-NAME")
                 (let ((file (expand-file-name (buffer-file-name)))
                       (line (line-number-at-pos)))
                   (dolist (name arxml-mode-tags-list)
@@ -169,7 +169,7 @@
               (when attr
                 (when (string-equal (xmltok-attribute-local-name attr) "DEST")
                   (setq dest (xmltok-attribute-value attr))))
-              `((tag-name . ,tag-name)
+              `((element . ,element)
                 (dest .,dest)
                 (identifier . ,identifier)
                 (begin . ,begin)
@@ -331,10 +331,12 @@
     (when (and identifier
                ;; when tag has REF suffix - this is a reference so complete
                ;; based on tags
-               (string-match "REF\\'" (alist-get 'tag-name identifier)))
+               (string-match "REF\\'" (alist-get 'element identifier)))
       (list (alist-get 'begin identifier)
             (alist-get 'end identifier)
             (cl-remove-if-not #'(lambda (name)
+                                  ;; only include tags which have type matching
+                                  ;; dest
                                   (let ((tag (arxml-mode-lookup-tag name)))
                                     (string-equal (alist-get 'dest identifier)
                                                   (arxml-mode-tag-type tag))))
