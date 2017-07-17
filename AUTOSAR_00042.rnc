@@ -11432,7 +11432,7 @@ DIAGNOSTIC-TROUBLE-CODE-J-1939 =
   element J-1939-DTC-VALUE {
     POSITIVE-INTEGER-VALUE-VARIATION-POINT >> a:documentation [ ]}?,
   element KIND {
-    DIAGNOSTIC-TROUBLE-CODE-J-1939-DTC-KIND-ENUM >> a:documentation [ ]}?,
+    DIAGNOSTIC-TROUBLE-CODE-J-1939-DTC-KIND-ENUM--SIMPLE >> a:documentation [ ]}?,
   element NODE-REF {REF--SIMPLE,
     attribute DEST {DIAGNOSTIC-J-1939-NODE--SUBTYPES-ENUM}}?,
   element SPN-REF {REF--SIMPLE,
@@ -12322,7 +12322,7 @@ ECU-INSTANCE =
     (element TP-ADDRESS-REF {REF--SIMPLE,
        attribute DEST {TP-ADDRESS--SUBTYPES-ENUM}})*}?,
   element V-2-X-SUPPORTED {
-    V-2-X-SUPPORT-ENUM >> a:documentation [ ]}?,
+    V-2-X-SUPPORT-ENUM--SIMPLE >> a:documentation [ ]}?,
   element WAKE-UP-OVER-BUS-SUPPORTED {
     BOOLEAN--SIMPLE >> a:documentation [ ]}?,
   AR-OBJECT,
@@ -18520,16 +18520,16 @@ IPV-4-CONFIGURATION =
   element ASSIGNMENT-PRIORITY {
     POSITIVE-INTEGER--SIMPLE >> a:documentation [ ]}?,
   element DEFAULT-GATEWAY {
-    IP4-ADDRESS-STRING >> a:documentation [ ]}?,
+    IP4-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element DNS-SERVER-ADDRESSES {
     (element DNS-SERVER-ADDRESS {
-       IP4-ADDRESS-STRING >> a:documentation [ ]})*}?,
+       IP4-ADDRESS-STRING--SIMPLE >> a:documentation [ ]})*}?,
   element IP-ADDRESS-KEEP-BEHAVIOR {
     IP-ADDRESS-KEEP-ENUM--SIMPLE >> a:documentation [ ]}?,
-  element IPV-4-ADDRESS {IP4-ADDRESS-STRING >> a:documentation [ ]}?,
+  element IPV-4-ADDRESS {IP4-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element IPV-4-ADDRESS-SOURCE {
-    IPV-4-ADDRESS-SOURCE-ENUM >> a:documentation [ ]}?,
-  element NETWORK-MASK {IP4-ADDRESS-STRING >> a:documentation [ ]}?,
+    IPV-4-ADDRESS-SOURCE-ENUM--SIMPLE >> a:documentation [ ]}?,
+  element NETWORK-MASK {IP4-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element TTL {POSITIVE-INTEGER--SIMPLE >> a:documentation [ ]}?,
   AR-OBJECT
 
@@ -18542,16 +18542,16 @@ IPV-4-DHCP-SERVER-CONFIGURATION =
   element INTRODUCTION {DOCUMENTATION-BLOCK >> a:documentation [ ]}?,
   element ADMIN-DATA {ADMIN-DATA >> a:documentation [ ]}?,
   element ADDRESS-RANGE-LOWER-BOUND {
-    IP4-ADDRESS-STRING >> a:documentation [ ]}?,
+    IP4-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element ADDRESS-RANGE-UPPER-BOUND {
-    IP4-ADDRESS-STRING >> a:documentation [ ]}?,
+    IP4-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element DEFAULT-GATEWAY {
-    IP4-ADDRESS-STRING >> a:documentation [ ]}?,
+    IP4-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element DEFAULT-LEASE-TIME {TIME-VALUE--SIMPLE >> a:documentation [ ]}?,
   element DNS-SERVER-ADDRESSES {
     (element DNS-SERVER-ADDRESS {
-       IP4-ADDRESS-STRING >> a:documentation [ ]})*}?,
-  element NETWORK-MASK {IP4-ADDRESS-STRING >> a:documentation [ ]}?,
+       IP4-ADDRESS-STRING--SIMPLE >> a:documentation [ ]})*}?,
+  element NETWORK-MASK {IP4-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   AR-OBJECT
 
 # element group for class EthernetTopology::Ipv6Configuration
@@ -18559,19 +18559,19 @@ IPV-4-DHCP-SERVER-CONFIGURATION =
 IPV-6-CONFIGURATION =
   element ASSIGNMENT-PRIORITY {
     POSITIVE-INTEGER--SIMPLE >> a:documentation [ ]}?,
-  element DEFAULT-ROUTER {IP6-ADDRESS-STRING >> a:documentation [ ]}?,
+  element DEFAULT-ROUTER {IP6-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element DNS-SERVER-ADDRESSES {
     (element DNS-SERVER-ADDRESS {
-       IP6-ADDRESS-STRING >> a:documentation [ ]})*}?,
+       IP6-ADDRESS-STRING--SIMPLE >> a:documentation [ ]})*}?,
   element ENABLE-ANYCAST {BOOLEAN--SIMPLE >> a:documentation [ ]}?,
   element HOP-COUNT {POSITIVE-INTEGER--SIMPLE >> a:documentation [ ]}?,
   element IP-ADDRESS-KEEP-BEHAVIOR {
     IP-ADDRESS-KEEP-ENUM--SIMPLE >> a:documentation [ ]}?,
   element IP-ADDRESS-PREFIX-LENGTH {
     POSITIVE-INTEGER--SIMPLE >> a:documentation [ ]}?,
-  element IPV-6-ADDRESS {IP6-ADDRESS-STRING >> a:documentation [ ]}?,
+  element IPV-6-ADDRESS {IP6-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element IPV-6-ADDRESS-SOURCE {
-    IPV-6-ADDRESS-SOURCE-ENUM >> a:documentation [ ]}?,
+    IPV-6-ADDRESS-SOURCE-ENUM--SIMPLE >> a:documentation [ ]}?,
   AR-OBJECT
 
 # element group for class EthernetTopology::Ipv6DhcpServerConfiguration
@@ -18583,16 +18583,16 @@ IPV-6-DHCP-SERVER-CONFIGURATION =
   element INTRODUCTION {DOCUMENTATION-BLOCK >> a:documentation [ ]}?,
   element ADMIN-DATA {ADMIN-DATA >> a:documentation [ ]}?,
   element ADDRESS-RANGE-LOWER-BOUND {
-    IP6-ADDRESS-STRING >> a:documentation [ ]}?,
+    IP6-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element ADDRESS-RANGE-UPPER-BOUND {
-    IP6-ADDRESS-STRING >> a:documentation [ ]}?,
+    IP6-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element DEFAULT-GATEWAY {
-    IP6-ADDRESS-STRING >> a:documentation [ ]}?,
+    IP6-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element DEFAULT-LEASE-TIME {TIME-VALUE--SIMPLE >> a:documentation [ ]}?,
   element DNS-SERVER-ADDRESSES {
     (element DNS-SERVER-ADDRESS {
-       IP6-ADDRESS-STRING >> a:documentation [ ]})*}?,
-  element NETWORK-MASK {IP6-ADDRESS-STRING >> a:documentation [ ]}?,
+       IP6-ADDRESS-STRING--SIMPLE >> a:documentation [ ]})*}?,
+  element NETWORK-MASK {IP6-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   AR-OBJECT
 
 # element group for class ListElements::Item
@@ -26959,9 +26959,9 @@ SOMEIP-SERVICE-INSTANCE-TO-MACHINE-MAPPING =
   element SERVICE-INSTANCE-REF {REF--SIMPLE,
     attribute DEST {ADAPTIVE-PLATFORM-SERVICE-INSTANCE--SUBTYPES-ENUM}}?,
   element IPV-4-MULTICAST-IP-ADDRESS {
-    IP4-ADDRESS-STRING >> a:documentation [ ]}?,
+    IP4-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element IPV-6-MULTICAST-IP-ADDRESS {
-    IP6-ADDRESS-STRING >> a:documentation [ ]}?,
+    IP6-ADDRESS-STRING--SIMPLE >> a:documentation [ ]}?,
   element PORT-CONFIGS {
     (element SERVICE-INSTANCE-PORT-CONFIG {
        SERVICE-INSTANCE-PORT-CONFIG})*}?,
@@ -32418,7 +32418,6 @@ DIAGNOSTIC-TEST-RESULT-UPDATE-ENUM--SIMPLE =
   |
     "STEADY"
 
-DIAGNOSTIC-TROUBLE-CODE-J-1939-DTC-KIND-ENUM = AR-OBJECT
 DIAGNOSTIC-TROUBLE-CODE-J-1939-DTC-KIND-ENUM--SIMPLE =
   "SERVICE-ONLY"
   |
@@ -32857,13 +32856,11 @@ INTERVAL-TYPE-ENUM--SIMPLE =
   |
     "OPEN"
 
-IP4-ADDRESS-STRING = AR-OBJECT
 IP4-ADDRESS-STRING--SIMPLE =
   xsd:string {
     pattern =
       "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|ANY"}
 
-IP6-ADDRESS-STRING = AR-OBJECT
 IP6-ADDRESS-STRING--SIMPLE =
   xsd:string {
     pattern = "[0-9A-Fa-f]{1,4}(:[0-9A-Fa-f]{1,4}){7,7}|ANY"}
@@ -32873,7 +32870,6 @@ IP-ADDRESS-KEEP-ENUM--SIMPLE =
   |
     "STORE-PERSISTENTLY"
 
-IPV-4-ADDRESS-SOURCE-ENUM = AR-OBJECT
 IPV-4-ADDRESS-SOURCE-ENUM--SIMPLE =
   "AUTO-IP"
   |
@@ -32885,7 +32881,6 @@ IPV-4-ADDRESS-SOURCE-ENUM--SIMPLE =
   |
     "FIXED"
 
-IPV-6-ADDRESS-SOURCE-ENUM = AR-OBJECT
 IPV-6-ADDRESS-SOURCE-ENUM--SIMPLE =
   "DHCPV-6"
   |
@@ -33931,7 +33926,6 @@ UNLIMITED-INTEGER--SIMPLE =
 
 URI-STRING--SIMPLE = xsd:string
 
-V-2-X-SUPPORT-ENUM = AR-OBJECT
 V-2-X-SUPPORT-ENUM--SIMPLE =
   "V-2-X-ACTIVE-SUPPORTED"
   |
