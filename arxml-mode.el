@@ -18,12 +18,13 @@
 (require 'speedbar)
 (require 'eldoc)
 
-(require 'yasnippet nil t)
-(require 'flycheck nil t)
-(require 'smartparens nil t)
-(require 'company nil t)
-(require 'evil-matchit nil t)
-(require 'all-the-icons nil t)
+(eval-when-compile
+  (require 'yasnippet nil t)
+  (require 'flycheck nil t)
+  (require 'smartparens nil t)
+  (require 'company nil t)
+  (require 'evil-matchit nil t)
+  (require 'all-the-icons nil t))
 
 (defconst arxml-mode-base-path
   (file-name-directory
@@ -36,29 +37,28 @@
   (expand-file-name "AUTOSAR_00042.xsd" arxml-mode-base-path))
 
 ;; yasnippet integration
-(when (boundp 'yas-snippet-dirs)
+(with-eval-after-load 'yasnippet
   (push (expand-file-name "snippets" arxml-mode-base-path)
         yas-snippet-dirs))
 
 ;; flycheck integration
-(when (fboundp 'flycheck-add-mode)
+(with-eval-after-load 'flycheck
   (flycheck-add-mode 'xml-xmllint 'arxml-mode)
   (flycheck-add-mode 'xml-xmlstarlet 'arxml-mode))
 
 ;; smartparens integration
-(when (boundp 'sp-navigate-consider-sgml-tags)
+(with-eval-after-load 'smartparens
   (add-to-list 'sp-navigate-consider-sgml-tags 'arxml-mode))
 
 ;; evil-matchit integration
-(when (boundp 'evilmi-plugins)
+(with-eval-after-load 'evil-matchit
   (plist-put evilmi-plugins 'arxml-mode '((evilmi-template-get-tag evilmi-template-jump)
                                           (evilmi-simple-get-tag evilmi-simple-jump)
                                           (evilmi-html-get-tag evilmi-html-jump))))
 ;; all the icons integration
-(when (boundp 'all-the-icons-icon-alist)
+(with-eval-after-load 'all-the-icons
   (push '("\.arxml$" all-the-icons-faicon "file-code-o" :height 0.95 :face all-the-icons-lorange)
-        all-the-icons-icon-alist))
-(when (boundp 'all-the-icons-mode-icon-alist)
+        all-the-icons-icon-alist)
   (push '(arxml-mode all-the-icons-faicon "file-code-o" :height 0.95 :face all-the-icons-lorange)
         all-the-icons-mode-icon-alist))
 
@@ -347,17 +347,18 @@
             :exclusive 'no
             :company-docsig #'identity
             :company-doc-buffer #'(lambda (identifier)
-                                    (let ((defs (arxml-mode-find-tag-locations 'def identifier))
-                                          (refs (arxml-mode-find-tag-locations 'ref identifier)))
-                                      (company-doc-buffer
-                                       (format "%s\n\nDefined at:\n%s\n\nReferenced at:\n%s"
-                                               identifier
-                                               (mapconcat
-                                                #'arxml-mode-tag-location-to-string
-                                                defs "\n")
-                                               (mapconcat
-                                                #'arxml-mode-tag-location-to-string
-                                                refs "\n")))))
+                                    (when (fboundp 'company-doc-buffer)
+                                      (let ((defs (arxml-mode-find-tag-locations 'def identifier))
+                                            (refs (arxml-mode-find-tag-locations 'ref identifier)))
+                                        (company-doc-buffer
+                                         (format "%s\n\nDefined at:\n%s\n\nReferenced at:\n%s"
+                                                 identifier
+                                                 (mapconcat
+                                                  #'arxml-mode-tag-location-to-string
+                                                  defs "\n")
+                                                 (mapconcat
+                                                  #'arxml-mode-tag-location-to-string
+                                                  refs "\n"))))))
             :company-location #'(lambda (identifier)
                                   (let ((def (car (arxml-mode-find-tag-locations 'def identifier))))
                                     (cons (arxml-mode-tag-location-file def)
@@ -404,12 +405,11 @@
   (add-function :before-until (local 'eldoc-documentation-function)
                 #'arxml-mode-eldoc-function)
   ;; integrate with flycheck for validation
-  (when (boundp 'flycheck-xml-xmlstarlet-xsd-path)
-    (setq flycheck-xml-xmlstarlet-xsd-path arxml-mode-xsd-path))
-  (when (boundp 'flycheck-xml-xmllint-xsd-path)
+  (with-eval-after-load 'flycheck
+    (setq flycheck-xml-xmlstarlet-xsd-path arxml-mode-xsd-path)
     (setq flycheck-xml-xmllint-xsd-path flycheck-xml-xmlstarlet-xsd-path))
   ;; limit company to only the useful backends
-  (when (boundp 'company-backends)
+  (with-eval-after-load 'company
     (setq company-backends '((company-nxml company-capf)))))
 
 ;; use local schemas.xml to find our local AUTOSAR_00042.rnc
