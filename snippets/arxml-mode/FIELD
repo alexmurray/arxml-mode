@@ -3,7 +3,7 @@
 # --
 <FIELD>
   <SHORT-NAME>${1:shortName}</SHORT-NAME>
-  <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">${2:/ara/stdtypes/${3:uInt32}</TYPE-TREF>
+  <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">${2:/ara/stdtypes/${3:uInt32}}</TYPE-TREF>
   <HAS-GETTER>${4:true}</HAS-GETTER>
   <HAS-NOTIFIER>${5:true}</HAS-NOTIFIER>
   <HAS-SETTER>${6:true}</HAS-SETTER>
