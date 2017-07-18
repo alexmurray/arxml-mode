@@ -393,7 +393,7 @@
               (propertize (arxml-mode-tag-type tag)
                           'face 'bold)))))
 
-;; define our major-mode
+;;;###autoload(autoload 'arxml-mode "arxml-mode" " t nil")
 (define-derived-mode arxml-mode nxml-mode "arxml"
   "Major mode for editing arxml files."
   (add-to-list 'after-save-hook #'arxml-mode-parse-buffer)
@@ -414,6 +414,8 @@
 
 ;; use local schemas.xml to find our local AUTOSAR_00042.rnc
 (add-to-list 'rng-schema-locating-files (expand-file-name "schemas.xml" arxml-mode-base-path))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.arxml\\'" . arxml-mode))
 
 (provide 'arxml-mode)
 
