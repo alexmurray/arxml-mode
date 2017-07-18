@@ -2277,11 +2277,11 @@ ATP-TYPE--SUBTYPES-ENUM =
 # attribute group for class AttributeValueVariationPoints::AttributeValueVariationPoint
 ATTRIBUTE-VALUE-VARIATION-POINT =
   attribute BINDING-TIME {
-    BINDING-TIME-ENUM--SIMPLE >> a:documentation [ ]},
-  attribute BLUEPRINT-VALUE {STRING--SIMPLE >> a:documentation [ ]},
-  attribute SD {STRING--SIMPLE >> a:documentation [ ]},
+    BINDING-TIME-ENUM--SIMPLE >> a:documentation [ ]}?,
+  attribute BLUEPRINT-VALUE {STRING--SIMPLE >> a:documentation [ ]}?,
+  attribute SD {STRING--SIMPLE >> a:documentation [ ]}?,
   attribute SHORT-LABEL {
-    PRIMITIVE-IDENTIFIER--SIMPLE >> a:documentation [ ]}
+    PRIMITIVE-IDENTIFIER--SIMPLE >> a:documentation [ ]}?
 
 # element group for class DataPrototypes::AutosarDataPrototype
 AUTOSAR-DATA-PROTOTYPE--SUBTYPES-ENUM =
@@ -21230,7 +21230,8 @@ NUMERICAL-VALUE-VARIATION-POINT =
      element SYSC-REF {REF--SIMPLE,
        attribute DEST {SW-SYSTEMCONST--SUBTYPES-ENUM}})*,
   AR-OBJECT,
-  ATTRIBUTE-VALUE-VARIATION-POINT
+  ATTRIBUTE-VALUE-VARIATION-POINT,
+  STRING--SIMPLE
 
 # element group for class NvBlockComponent::NvBlockDataMapping
 # complex type for class NvBlockComponent::NvBlockDataMapping
@@ -31438,9 +31439,7 @@ VENDOR-SPECIFIC-SERVICE-NEEDS =
   AR-OBJECT,
   IDENTIFIABLE
 
-VERBATIM-STRING = AR-OBJECT, VERBATIM-STRING-GROUP
-# attribute group for class VERBATIM-STRING
-VERBATIM-STRING-GROUP = xml_space >> a:documentation [ ]
+VERBATIM-STRING = AR-OBJECT, VERBATIM-STRING--SIMPLE
 
 VERBATIM-STRING--SIMPLE = xsd:string
 # element group for class Timing::VfbTiming
