@@ -414,7 +414,6 @@
 
 ;; use local schemas.xml to find our local AUTOSAR_00042.rnc
 (add-to-list 'rng-schema-locating-files (expand-file-name "schemas.xml" arxml-mode-base-path))
-(add-to-list 'auto-mode-alist '("\\.arxml\\'" . arxml-mode))
 
 (provide 'arxml-mode)
 
