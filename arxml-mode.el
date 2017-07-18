@@ -396,7 +396,7 @@
 ;; define our major-mode
 (define-derived-mode arxml-mode nxml-mode "arxml"
   "Major mode for editing arxml files."
-  (add-to-list 'after-change-functions #'(lambda (beg end len) (arxml-mode-parse-buffer)))
+  (add-to-list 'after-save-hook #'arxml-mode-parse-buffer)
   (add-to-list 'xref-backend-functions #'arxml-mode-xref-backend)
   (add-to-list 'completion-at-point-functions #'arxml-mode-completion-at-point)
   (setq imenu-create-index-function #'arxml-mode-imenu-create-index)
