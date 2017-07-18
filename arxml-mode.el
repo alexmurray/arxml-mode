@@ -89,7 +89,8 @@
 (defun arxml-mode-ensure-tags ()
   "Ensure the tags have been parsed and consistent."
   (unless (string-equal arxml-mode-directory default-directory)
-    (arxml-mode-reset-tags))
+    (arxml-mode-reset-tags)
+    (setq arxml-mode-directory default-directory))
   (if arxml-mode-tags-list
       ;; raise error if not found in tags
       (dolist (identifier arxml-mode-tags-list)
