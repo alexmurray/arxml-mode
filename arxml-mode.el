@@ -36,32 +36,6 @@
 (defvar arxml-mode-xsd-path
   (expand-file-name "AUTOSAR_00042.xsd" arxml-mode-base-path))
 
-;; yasnippet integration
-(with-eval-after-load 'yasnippet
-  (push (expand-file-name "snippets" arxml-mode-base-path)
-        yas-snippet-dirs))
-
-;; flycheck integration
-(with-eval-after-load 'flycheck
-  (flycheck-add-mode 'xml-xmllint 'arxml-mode)
-  (flycheck-add-mode 'xml-xmlstarlet 'arxml-mode))
-
-;; smartparens integration
-(with-eval-after-load 'smartparens
-  (add-to-list 'sp-navigate-consider-sgml-tags 'arxml-mode))
-
-;; evil-matchit integration
-(with-eval-after-load 'evil-matchit
-  (plist-put evilmi-plugins 'arxml-mode '((evilmi-template-get-tag evilmi-template-jump)
-                                          (evilmi-simple-get-tag evilmi-simple-jump)
-                                          (evilmi-html-get-tag evilmi-html-jump))))
-;; all the icons integration
-(with-eval-after-load 'all-the-icons
-  (push '("\.arxml$" all-the-icons-faicon "file-code-o" :height 0.95 :face all-the-icons-lorange)
-        all-the-icons-icon-alist)
-  (push '(arxml-mode all-the-icons-faicon "file-code-o" :height 0.95 :face all-the-icons-lorange)
-        all-the-icons-mode-icon-alist))
-
 ;; xref integration
 ;; table to store tags data
 (defvar arxml-mode-tags-table (make-hash-table :test 'equal))
@@ -414,9 +388,75 @@
     (setq company-backends '((company-nxml company-capf)))))
 
 ;; use local schemas.xml to find our local AUTOSAR_00042.rnc
+;;;###autoload
 (add-to-list 'rng-schema-locating-files (expand-file-name "schemas.xml" arxml-mode-base-path))
+
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.arxml\\'" . arxml-mode))
+
+;; yasnippet integration
+;;;###autoload
+(with-eval-after-load 'yasnippet
+  (push (expand-file-name "snippets" arxml-mode-base-path)
+        yas-snippet-dirs))
+
+;; flycheck integration
+;;;###autoload
+(with-eval-after-load 'flycheck
+  (eval-and-compile
+    (defun arxml-mode-flycheck-start (checker callback)
+      "Flycheck start routine for unresolved references with CHECKER and CALLBACK."
+      (arxml-mode-ensure-tags)
+      (let ((errs))
+        (dolist (identifier arxml-mode-tags-list)
+          (let ((tag (arxml-mode-lookup-tag identifier)))
+            (when (and (= 0 (length (arxml-mode-tag-def tag))))
+              (dolist (ref (arxml-mode-tag-ref tag))
+                (when (string-equal (buffer-file-name)
+                                    (arxml-mode-tag-location-file ref))
+                  (push
+                   (flycheck-error-new-at
+                    (arxml-mode-tag-location-line ref)
+                    (arxml-mode-tag-location-col ref)
+                    'error (format "Unresolved reference %s [%s]"
+                                   (arxml-mode-tag-name tag)
+                                   (arxml-mode-tag-type tag))
+                    :checker checker
+                    :filename (arxml-mode-tag-location-file ref)
+                    :buffer (get-file-buffer (arxml-mode-tag-location-file ref)))
+                   errs))))))
+        (funcall callback 'finished errs))))
+
+  (flycheck-define-generic-checker 'arxml
+    "Check for invalid references etc in arxml files."
+    :start #'arxml-mode-flycheck-start
+    :modes '(arxml-mode))
+  (add-to-list 'flycheck-checkers 'arxml t)
+
+  (flycheck-add-mode 'xml-xmlstarlet 'arxml-mode)
+  (flycheck-add-mode 'xml-xmllint 'arxml-mode)
+  (flycheck-add-next-checker 'xml-xmlstarlet '(warning . arxml))
+  (flycheck-add-next-checker 'xml-xmllint '(warning . arxml)))
+
+
+;; smartparens integration
+;;;###autoload
+(with-eval-after-load 'smartparens
+  (add-to-list 'sp-navigate-consider-sgml-tags 'arxml-mode))
+
+;; evil-matchit integration
+;;;###autoload
+(with-eval-after-load 'evil-matchit
+  (plist-put evilmi-plugins 'arxml-mode '((evilmi-template-get-tag evilmi-template-jump)
+                                          (evilmi-simple-get-tag evilmi-simple-jump)
+                                          (evilmi-html-get-tag evilmi-html-jump))))
+;; all the icons integration
+;;;###autoload
+(with-eval-after-load 'all-the-icons
+  (push '("\.arxml$" all-the-icons-faicon "file-code-o" :height 0.95 :face all-the-icons-lorange)
+        all-the-icons-icon-alist)
+  (push '(arxml-mode all-the-icons-faicon "file-code-o" :height 0.95 :face all-the-icons-lorange)
+        all-the-icons-mode-icon-alist))
 
 (provide 'arxml-mode)
 
