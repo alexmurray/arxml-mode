@@ -284,7 +284,7 @@
       (save-restriction
         (widen)
         (goto-char (point-min))
-        (condition-case err
+        (condition-case nil
             (nxml-parse-instance)
           (nxml-file-parse-error nil))))))
 
