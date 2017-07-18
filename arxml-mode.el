@@ -396,7 +396,7 @@
 ;;;###autoload(autoload 'arxml-mode "arxml-mode" " t nil")
 (define-derived-mode arxml-mode nxml-mode "arxml"
   "Major mode for editing arxml files."
-  (add-to-list 'after-save-hook #'arxml-mode-parse-buffer)
+  (add-hook 'after-save-hook #'arxml-mode-parse-buffer nil t)
   (add-to-list 'xref-backend-functions #'arxml-mode-xref-backend)
   (add-to-list 'completion-at-point-functions #'arxml-mode-completion-at-point)
   (setq imenu-create-index-function #'arxml-mode-imenu-create-index)
