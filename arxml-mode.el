@@ -43,7 +43,7 @@
      (or load-file-name buffer-file-name)))))
 
 ;; path to the AUTOSAR_00042.xsd shipped with arxml-mode.el
-(defvar arxml-mode-xsd-path
+(defconst arxml-mode-xsd-path
   (expand-file-name "AUTOSAR_00042.xsd" arxml-mode-base-path))
 
 ;; xref integration
