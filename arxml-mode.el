@@ -17,6 +17,7 @@
 (require 'thingatpt)
 (require 'speedbar)
 (require 'eldoc)
+(require 'flyspell)
 
 ;;; Forward declaration of optional dependencies
 (declare-function company-doc-buffer "ext:company.el")
@@ -399,6 +400,9 @@
 (add-to-list 'rng-schema-locating-files (expand-file-name "schemas.xml" arxml-mode-base-path))
 
 (add-to-list 'auto-mode-alist '("\\.arxml\\'" . arxml-mode))
+
+;; flyspell integration
+(put 'arxml-mode 'flyspell-mode-predicate 'sgml-mode-flyspell-verify)
 
 ;; yasnippet integration
 (with-eval-after-load 'yasnippet
