@@ -18,13 +18,22 @@
 (require 'speedbar)
 (require 'eldoc)
 
-(eval-when-compile
-  (require 'yasnippet nil t)
-  (require 'flycheck nil t)
-  (require 'smartparens nil t)
-  (require 'company nil t)
-  (require 'evil-matchit nil t)
-  (require 'all-the-icons nil t))
+;;; Forward declaration of optional dependencies
+(declare-function company-doc-buffer "ext:company.el")
+(declare-function flycheck-error-new-at "ext:flycheck.el")
+(declare-function flycheck-define-generic-checker "ext:flycheck.el")
+(declare-function flycheck-add-next-checker "ext:flycheck.el")
+(declare-function flycheck-add-mode "ext:flycheck.el")
+
+(defvar flycheck-xml-xmlstarlet-xsd-path)
+(defvar flycheck-xml-xmllint-xsd-path)
+(defvar flycheck-checkers)
+(defvar company-backends)
+(defvar yas-snippet-dirs)
+(defvar sp-navigate-consider-sgml-tags)
+(defvar evilmi-plugins)
+(defvar all-the-icons-icon-alist)
+(defvar all-the-icons-mode-icon-alist)
 
 (defconst arxml-mode-base-path
   (file-name-directory
@@ -68,7 +77,7 @@
   (if arxml-mode-tags-list
       ;; raise error if not found in tags
       (dolist (identifier arxml-mode-tags-list)
-        (assert (arxml-mode-lookup-tag identifier t) t))
+        (arxml-mode-lookup-tag identifier))
     ;; ensure to create tags hash table
     (dolist (f (directory-files default-directory nil ".*\\.arxml\\'"))
       (with-current-buffer (find-file-noselect f)
@@ -322,18 +331,17 @@
             :exclusive 'no
             :company-docsig #'identity
             :company-doc-buffer #'(lambda (identifier)
-                                    (when (fboundp 'company-doc-buffer)
-                                      (let ((defs (arxml-mode-find-tag-locations 'def identifier))
-                                            (refs (arxml-mode-find-tag-locations 'ref identifier)))
-                                        (company-doc-buffer
-                                         (format "%s\n\nDefined at:\n%s\n\nReferenced at:\n%s"
-                                                 identifier
-                                                 (mapconcat
-                                                  #'arxml-mode-tag-location-to-string
-                                                  defs "\n")
-                                                 (mapconcat
-                                                  #'arxml-mode-tag-location-to-string
-                                                  refs "\n"))))))
+                                    (let ((defs (arxml-mode-find-tag-locations 'def identifier))
+                                          (refs (arxml-mode-find-tag-locations 'ref identifier)))
+                                      (company-doc-buffer
+                                       (format "%s\n\nDefined at:\n%s\n\nReferenced at:\n%s"
+                                               identifier
+                                               (mapconcat
+                                                #'arxml-mode-tag-location-to-string
+                                                defs "\n")
+                                               (mapconcat
+                                                #'arxml-mode-tag-location-to-string
+                                                refs "\n")))))
             :company-location #'(lambda (identifier)
                                   (let ((def (car (arxml-mode-find-tag-locations 'def identifier))))
                                     (cons (arxml-mode-tag-location-file def)
