@@ -396,20 +396,16 @@
     (setq company-backends '((company-nxml company-capf)))))
 
 ;; use local schemas.xml to find our local AUTOSAR_00042.rnc
-;;;###autoload
 (add-to-list 'rng-schema-locating-files (expand-file-name "schemas.xml" arxml-mode-base-path))
 
-;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.arxml\\'" . arxml-mode))
 
 ;; yasnippet integration
-;;;###autoload
 (with-eval-after-load 'yasnippet
   (push (expand-file-name "snippets" arxml-mode-base-path)
         yas-snippet-dirs))
 
 ;; flycheck integration
-;;;###autoload
 (with-eval-after-load 'flycheck
   (eval-and-compile
     (defun arxml-mode-flycheck-start (checker callback)
@@ -448,18 +444,15 @@
 
 
 ;; smartparens integration
-;;;###autoload
 (with-eval-after-load 'smartparens
   (add-to-list 'sp-navigate-consider-sgml-tags 'arxml-mode))
 
 ;; evil-matchit integration
-;;;###autoload
 (with-eval-after-load 'evil-matchit
   (plist-put evilmi-plugins 'arxml-mode '((evilmi-template-get-tag evilmi-template-jump)
                                           (evilmi-simple-get-tag evilmi-simple-jump)
                                           (evilmi-html-get-tag evilmi-html-jump))))
 ;; all the icons integration
-;;;###autoload
 (with-eval-after-load 'all-the-icons
   (push '("\.arxml$" all-the-icons-faicon "file-code-o" :height 0.95 :face all-the-icons-lorange)
         all-the-icons-icon-alist)
