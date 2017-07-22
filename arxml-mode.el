@@ -1,12 +1,36 @@
 ;;; arxml-mode --- Major mode for editing arxml files -*- lexical-binding: t -*-
 
+;; Copyright (c) 2017 Alex Murray
+
+;; Author: Alex Murray <murray.alex@gmail.com>
+;; Maintainer: Alex Murray <murray.alex@gmail.com>
+;; URL: https://github.com/alexmurray/arxml-mode
+;; Version: 0.1
+;; Package-Requires: ((emacs "25.1"))
+
+;; This file is not part of GNU Emacs.
+
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 ;;; Commentary:
 
-;;
-;; TODO: Improve imenu integration to separate out into element types
-;;
-;; TODO: Add more yasnippets
-;;
+;; This packages provides an enhanced editing environemtn for AUTOSAR arxml
+;; files.
+
+;;;; Setup
+
+;; (require 'arxml-mode)
 
 ;;; Code:
 (require 'sgml-mode)
