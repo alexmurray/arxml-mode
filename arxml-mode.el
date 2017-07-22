@@ -1,4 +1,4 @@
-;;; arxml-mode --- Major mode for editing arxml files -*- lexical-binding: t -*-
+;;; arxml-mode.el --- Major mode for editing arxml files -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2017 Alex Murray
 
