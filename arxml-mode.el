@@ -286,16 +286,18 @@
     (dolist (orphan orphans)
       (setq arxml-mode-tags-list
             (cl-delete orphan arxml-mode-tags-list :test #'equal))))
-  ;; use nxml to parse and hook in via the tag validation function
-  (let ((nxml-parse-file-name (buffer-file-name))
-        (nxml-validate-function #'arxml-mode-parse-tag))
-    (save-excursion
-      (save-restriction
-        (widen)
-        (goto-char (point-min))
-        (condition-case nil
-            (nxml-parse-instance)
-          (nxml-file-parse-error nil))))))
+  ;; ensure we don't clobber match data since we run at buffer modification
+  (save-match-data
+    ;; use nxml to parse and hook in via the tag validation function
+    (let ((nxml-parse-file-name (buffer-file-name))
+          (nxml-validate-function #'arxml-mode-parse-tag))
+      (save-excursion
+        (save-restriction
+          (widen)
+          (goto-char (point-min))
+          (condition-case nil
+              (nxml-parse-instance)
+            (nxml-file-parse-error nil)))))))
 
 (cl-defmethod xref-backend-identifier-at-point ((_backend (eql arxml)))
   (alist-get 'identifier (arxml-mode-identifier-at-point)))
