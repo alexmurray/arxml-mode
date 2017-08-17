@@ -19109,7 +19109,8 @@ LABELED-LIST =
 # element group for class LanguageDataModel::LanguageSpecific
 # attribute group for class LanguageDataModel::LanguageSpecific
 LANGUAGE-SPECIFIC =
-  attribute L {L-ENUM--SIMPLE >> a:documentation [ ]}
+  attribute L {L-ENUM--SIMPLE >> a:documentation [ ]},
+  STRING--SIMPLE
 
 # element group for class LatencyTimingConstraint::LatencyTimingConstraint
 # complex type for class LatencyTimingConstraint::LatencyTimingConstraint
@@ -19247,7 +19248,7 @@ LIFE-CYCLE-STATE-DEFINITION-GROUP =
 LIFE-CYCLE-STATE-DEFINITION-GROUP--SUBTYPES-ENUM =
   "LIFE-CYCLE-STATE-DEFINITION-GROUP"
 
-LIMIT-VALUE = AR-OBJECT, LIMIT-VALUE-GROUP
+LIMIT-VALUE = AR-OBJECT, LIMIT-VALUE-GROUP, LIMIT-VALUE--SIMPLE
 # attribute group for class LIMIT-VALUE
 LIMIT-VALUE-GROUP =
   attribute INTERVAL-TYPE {
@@ -19274,7 +19275,8 @@ LIMIT =
        attribute DEST {SW-SYSTEMCONST--SUBTYPES-ENUM}})*,
   AR-OBJECT,
   ATTRIBUTE-VALUE-VARIATION-POINT,
-  LIMIT-GROUP
+  LIMIT-GROUP,
+  LIMIT-VALUE--SIMPLE
 
 # element group for class LinTopology::LinCluster
 # complex type for class LinTopology::LinCluster
