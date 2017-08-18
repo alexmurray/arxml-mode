@@ -200,7 +200,7 @@
     ;; else treat as data and end of tag
     (let ((current (car arxml-mode-parse-stack))
           (parent (cadr arxml-mode-parse-stack))
-          (grandparent (caddr arxml-mode-parse-stack))
+          (grandparent (cl-caddr arxml-mode-parse-stack))
           (type nil)
           (desc nil)
           (identifier nil)
