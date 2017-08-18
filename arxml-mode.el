@@ -80,8 +80,8 @@
 ;; directory where all arxml files reside
 (defvar arxml-mode-directory nil)
 
-;; a tag - has type, name, definitions and references
-(cl-defstruct arxml-mode-tag type name def ref)
+;; a tag - has type, name, description definitions and references
+(cl-defstruct arxml-mode-tag type name desc def ref)
 
 ;; a tag location (ie. a definition or reference) - has file, line number and
 ;; column number
@@ -194,14 +194,20 @@
               (attrs . ,(cadr start-tag))
               (ref . ,nil)
               (short-name . ,nil)
+              (desc . ,nil)
               (pos . ,(point)))
             arxml-mode-parse-stack)
     ;; else treat as data and end of tag
     (let ((current (car arxml-mode-parse-stack))
           (parent (cadr arxml-mode-parse-stack))
+          (grandparent (caddr arxml-mode-parse-stack))
           (type nil)
+          (desc nil)
           (identifier nil)
           (element nil))
+      (when (string-equal (alist-get 'tag current) "L-2")
+        ;; assign this text to the desc property of parent of parent
+        (setf (alist-get 'desc grandparent) text))
       (when (string-equal (alist-get 'tag current) "SHORT-NAME")
         ;; assign this text to the short-name property of parent (cadr)
         (setf (alist-get 'short-name parent) text)
@@ -214,6 +220,7 @@
       ;; now process end of tag - if the element on top of stack has a short-name
       ;; then this is a definition
       (when (alist-get 'short-name current)
+        (setq desc (alist-get 'desc current))
         (setq type 'def)
         (setq identifier
               (concat "/" (mapconcat #'(lambda (tag) (alist-get 'short-name tag))
@@ -242,7 +249,7 @@
             (setq col (let ((tab-width 1))
                         (current-column))))
           (unless tag
-            (setq tag (make-arxml-mode-tag :type element :name identifier :def nil :ref nil))
+            (setq tag (make-arxml-mode-tag :type element :name identifier :desc desc :def nil :ref nil))
             (cl-pushnew identifier arxml-mode-tags-list :test #'equal)
             (puthash identifier tag arxml-mode-tags-table))
           (let ((location (make-arxml-mode-tag-location :file (buffer-file-name) :line line :col col)))
@@ -358,17 +365,18 @@
             :exclusive 'no
             :company-docsig #'identity
             :company-doc-buffer #'(lambda (identifier)
-                                    (let ((defs (arxml-mode-find-tag-locations 'def identifier))
-                                          (refs (arxml-mode-find-tag-locations 'ref identifier)))
+                                    (let* ((tag (arxml-mode-lookup-tag identifier))
+                                           (desc (arxml-mode-tag-desc tag)))
                                       (company-doc-buffer
-                                       (format "%s\n\nDefined at:\n%s\n\nReferenced at:\n%s"
+                                       (format "%s\n\n%sDefined at:\n%s\n\nReferenced at:\n%s"
                                                identifier
+                                               (if desc (concat desc "\n\n") "")
                                                (mapconcat
                                                 #'arxml-mode-tag-location-to-string
-                                                defs "\n")
+                                                (arxml-mode-tag-def tag) "\n")
                                                (mapconcat
                                                 #'arxml-mode-tag-location-to-string
-                                                refs "\n")))))
+                                                (arxml-mode-tag-def tag) "\n")))))
             :company-location #'(lambda (identifier)
                                   (let ((def (car (arxml-mode-find-tag-locations 'def identifier))))
                                     (cons (arxml-mode-tag-location-file def)
@@ -398,10 +406,14 @@
   (arxml-mode-ensure-tags)
   (let ((tag (arxml-mode-lookup-tag (alist-get 'identifier (arxml-mode-identifier-at-point)) t)))
     (when tag
-      (format "%s -> %s"
+      (format "%s -> %s%s"
               (arxml-mode-tag-name tag)
               (propertize (arxml-mode-tag-type tag)
-                          'face 'bold)))))
+                          'face 'bold)
+              (let ((desc (arxml-mode-tag-desc tag)))
+                (if desc
+                    (concat ": " desc)
+                  ""))))))
 
 ;;;###autoload(autoload 'arxml-mode "arxml-mode" " t nil")
 (define-derived-mode arxml-mode nxml-mode "arxml"
