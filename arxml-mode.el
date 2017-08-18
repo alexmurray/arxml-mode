@@ -81,7 +81,7 @@
 (defvar arxml-mode-directory nil)
 
 ;; a tag - has type, name, description definitions and references
-(cl-defstruct arxml-mode-tag type name desc def ref)
+(cl-defstruct arxml-mode-tag type name desc defs refs)
 
 ;; a tag location (ie. a definition or reference) - has file, line number and
 ;; column number
@@ -120,8 +120,8 @@
   (arxml-mode-ensure-tags)
   (let ((tag (arxml-mode-lookup-tag name)))
     (pcase type
-      ('def (arxml-mode-tag-def tag))
-      ('ref (arxml-mode-tag-ref tag))
+      ('defs (arxml-mode-tag-defs tag))
+      ('refs (arxml-mode-tag-refs tag))
       (_ (error "Unknown type %S" type)))))
 
 ;; only active when in arxml-mode
@@ -171,7 +171,7 @@
                                      (length identifier))
                                  (string-equal identifier
                                                (substring name (- (length identifier)) nil)))
-                        (dolist (def (arxml-mode-tag-def tag))
+                        (dolist (def (arxml-mode-tag-defs tag))
                           (when (and  (string-equal file (arxml-mode-tag-location-file def))
                                       (= line (arxml-mode-tag-location-line def)))
                             (setq identifier name))))))))
@@ -249,13 +249,13 @@
             (setq col (let ((tab-width 1))
                         (current-column))))
           (unless tag
-            (setq tag (make-arxml-mode-tag :type element :name identifier :desc desc :def nil :ref nil))
+            (setq tag (make-arxml-mode-tag :type element :name identifier :desc desc :defs nil :refs nil))
             (cl-pushnew identifier arxml-mode-tags-list :test #'equal)
             (puthash identifier tag arxml-mode-tags-table))
           (let ((location (make-arxml-mode-tag-location :file (buffer-file-name) :line line :col col)))
             (pcase type
-              ('def (push location (arxml-mode-tag-def tag)))
-              ('ref (push location (arxml-mode-tag-ref tag)))
+              ('def (push location (arxml-mode-tag-defs tag)))
+              ('ref (push location (arxml-mode-tag-refs tag)))
               (_ (error "Unknown type %S" type))))))
       (pop arxml-mode-parse-stack)))
   ;; ensure to return nil since this is technically a validation function so
@@ -277,16 +277,16 @@
         ;; is an orphan already if not in tags table
         (if (null tag)
             (push identifier orphans)
-          (setf (arxml-mode-tag-def tag)
+          (setf (arxml-mode-tag-defs tag)
                 (cl-delete-if #'arxml-mode-tag-location-is-current-buffer-p
-                              (arxml-mode-tag-def tag)))
-          (setf (arxml-mode-tag-ref tag)
+                              (arxml-mode-tag-defs tag)))
+          (setf (arxml-mode-tag-refs tag)
                 (cl-delete-if #'arxml-mode-tag-location-is-current-buffer-p
-                              (arxml-mode-tag-ref tag)))
+                              (arxml-mode-tag-refs tag)))
           ;; if there are no definitions or references left then remove from tags
           ;; table
-          (when (= 0 (+ (length (arxml-mode-tag-def tag))
-                        (length (arxml-mode-tag-ref tag))))
+          (when (= 0 (+ (length (arxml-mode-tag-defs tag))
+                        (length (arxml-mode-tag-refs tag))))
             (remhash identifier arxml-mode-tags-table)
             (push identifier orphans)))))
     ;; remove any orphans from the list
@@ -310,10 +310,10 @@
   (alist-get 'identifier (arxml-mode-identifier-at-point)))
 
 (cl-defmethod xref-backend-definitions ((_backend (eql arxml)) identifier)
-  (arxml-mode-get-xrefs 'def identifier))
+  (arxml-mode-get-xrefs 'defs identifier))
 
 (cl-defmethod xref-backend-references ((_backend (eql arxml)) identifier)
-  (arxml-mode-get-xrefs 'ref identifier))
+  (arxml-mode-get-xrefs 'refs identifier))
 
 (cl-defmethod xref-backend-apropos ((_backend (eql arxml)) identifier)
   (arxml-mode-ensure-tags)
@@ -321,7 +321,7 @@
     (dolist (name arxml-mode-tags-list)
       (let ((tag (arxml-mode-lookup-tag name)))
         (when (string-match identifier name)
-          (dolist (location (arxml-mode-tag-def tag))
+          (dolist (location (arxml-mode-tag-defs tag))
             (push (xref-make name
                              (xref-make-file-location
                               (arxml-mode-tag-location-file location)
@@ -373,10 +373,10 @@
                                                (if desc (concat desc "\n\n") "")
                                                (mapconcat
                                                 #'arxml-mode-tag-location-to-string
-                                                (arxml-mode-tag-def tag) "\n")
+                                                (arxml-mode-tag-defs tag) "\n")
                                                (mapconcat
                                                 #'arxml-mode-tag-location-to-string
-                                                (arxml-mode-tag-def tag) "\n")))))
+                                                (arxml-mode-tag-defs tag) "\n")))))
             :company-location #'(lambda (identifier)
                                   (let ((def (car (arxml-mode-find-tag-locations 'def identifier))))
                                     (cons (arxml-mode-tag-location-file def)
@@ -389,7 +389,7 @@
   (let ((index nil))
     (dolist (identifier arxml-mode-tags-list)
       (let ((tag (arxml-mode-lookup-tag identifier)))
-        (dolist (def (arxml-mode-tag-def tag))
+        (dolist (def (arxml-mode-tag-defs tag))
           (when (string-equal (expand-file-name (buffer-file-name))
                               (arxml-mode-tag-location-file def))
             (push (cons (arxml-mode-tag-name tag)
@@ -456,8 +456,8 @@
       (let ((errs))
         (dolist (identifier arxml-mode-tags-list)
           (let ((tag (arxml-mode-lookup-tag identifier)))
-            (when (and (= 0 (length (arxml-mode-tag-def tag))))
-              (dolist (ref (arxml-mode-tag-ref tag))
+            (when (and (= 0 (length (arxml-mode-tag-defs tag))))
+              (dolist (ref (arxml-mode-tag-refs tag))
                 (when (string-equal (buffer-file-name)
                                     (arxml-mode-tag-location-file ref))
                   (push
