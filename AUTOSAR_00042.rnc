@@ -501,7 +501,7 @@ AR-PACKAGE =
      | element VIEW-MAP-SET {VIEW-MAP-SET}
      | element XCP-PDU {XCP-PDU})*}?,
   element AR-PACKAGES {
-    (element AR-PACKAGE {AR-PACKAGE})*}?,
+    (element AR-PACKAGE {AR-PACKAGE})*}*,
   element VARIATION-POINT {VARIATION-POINT >> a:documentation [ ]}?,
   AR-OBJECT,
   IDENTIFIABLE
