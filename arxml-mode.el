@@ -415,7 +415,6 @@
                     (concat ": " desc)
                   ""))))))
 
-;;;###autoload(autoload 'arxml-mode "arxml-mode" " t nil")
 (define-derived-mode arxml-mode nxml-mode "arxml"
   "Major mode for editing arxml files."
   (add-to-list 'after-change-functions #'(lambda (_beg _end _len) (arxml-mode-parse-buffer)))
