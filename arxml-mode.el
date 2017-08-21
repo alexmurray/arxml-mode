@@ -415,9 +415,19 @@
                     (concat ": " desc)
                   ""))))))
 
+(defvar arxml-mode-reparse-on-buffer-change nil
+  "When t reparse the buffer after every change, otherwise only reparse when buffer is saved.")
+
+(defun arxml-mode-reparse-buffer ()
+  "Reparse buffer when `arxml-mode-reparse-on-buffer-change' is set."
+  (when arxml-mode-reparse-on-buffer-change
+    (arxml-mode-parse-buffer)))
+
 (define-derived-mode arxml-mode nxml-mode "arxml"
   "Major mode for editing arxml files."
-  (add-to-list 'after-change-functions #'(lambda (_beg _end _len) (arxml-mode-parse-buffer)))
+  ;; reparse on either buffer change on only on save
+  (add-to-list 'after-change-functions #'arxml-mode-reparse-buffer)
+  (add-hook 'after-save-hook #'arxml-mode-parse-buffer nil t)
   (add-to-list 'xref-backend-functions #'arxml-mode-xref-backend)
   (add-to-list 'completion-at-point-functions #'arxml-mode-completion-at-point)
   (setq imenu-create-index-function #'arxml-mode-imenu-create-index)
