@@ -60,6 +60,16 @@
 (defvar all-the-icons-icon-alist)
 (defvar all-the-icons-mode-icon-alist)
 
+(defgroup arxml-mode nil
+  "Major mode for editing ARXML files and projects."
+  :group 'languages)
+
+(defcustom arxml-mode-reparse-on-buffer-change nil
+  "When t reparse the buffer after every change, otherwise only reparse when buffer is saved."
+  :group 'arxml-mode
+  :tag "Reparse on buffer change"
+  :type 'boolean)
+
 (defconst arxml-mode-base-path
   (file-name-directory
    (file-truename
@@ -414,9 +424,6 @@
                 (if desc
                     (concat ": " desc)
                   ""))))))
-
-(defvar arxml-mode-reparse-on-buffer-change nil
-  "When t reparse the buffer after every change, otherwise only reparse when buffer is saved.")
 
 (defun arxml-mode-reparse-buffer ()
   "Reparse buffer when `arxml-mode-reparse-on-buffer-change' is set."
