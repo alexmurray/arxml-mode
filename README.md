@@ -4,7 +4,7 @@
 [![MELPA](http://melpa.org/packages/arxml-mode-badge.svg)](http://melpa.org/#/arxml-mode)
 [![Build Status](https://travis-ci.org/alexmurray/arxml-mode.svg?branch=master)](https://travis-ci.org/alexmurray/arxml-mode)
 
-Provides an enhanced editing environment for AUTOSAR arxml files, including:
+Provides an enhanced editing environment for AUTOSAR arxml files within Emacs, including:
 
 * [nxml RNG](https://www.gnu.org/software/emacs/manual/html_node/nxml-mode/Introduction.html) integration
   for validity checking and XML tag completion
@@ -20,6 +20,8 @@ Provides an enhanced editing environment for AUTOSAR arxml files, including:
   frequently used constructs
 * [all-the-icons.el](https://github.com/domtronn/all-the-icons.el) integration
   for pretty mode-line
+
+Aims to provide features on-par with Vector's [vArxmlEditor](https://vector.com/vi_autosar_news_detail_en,1371902,,1699880,detail.html)
 
 ## Installation
 
